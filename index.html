@@ -3,42 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Vercel</title>
+    <title>StreamPro Cinema</title>
     <style>
         :root { --bg: #000000; --card: #141414; --accent: #e50914; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
-        header { background: #000; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow-x: hidden; }
+        
+        header { background: #000; padding: 10px 5%; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
+        .nav-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .nav-brand { font-weight: 900; font-size: 24px; color: var(--accent); cursor: pointer; }
-        .nav-link { color: #b3b3b3; cursor: pointer; font-size: 14px; margin-left: 20px; text-decoration: none; }
+        
+        /* Search Bar Styling */
+        .search-container { position: relative; width: 100%; }
+        #searchInput { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Dropdown Feature */
+        #searchDropdown { 
+            position: absolute; top: 100%; left: 0; width: 100%; 
+            background: #111; border: 1px solid #333; max-height: 300px; 
+            overflow-y: auto; display: none; z-index: 2000; border-radius: 0 0 4px 4px;
+        }
+        .search-item { padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #222; }
+        .search-item:hover { background: #222; }
+        .search-item img { width: 40px; height: 60px; border-radius: 2px; }
+
+        .nav-links { display: flex; gap: 15px; }
+        .nav-link { color: #b3b3b3; cursor: pointer; font-size: 14px; font-weight: bold; }
+        
         .page { display: none; padding: 20px 5%; }
         .page.active { display: block; }
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; }
+        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; cursor: pointer; overflow: hidden; }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
-        .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px; text-align: center; font-weight: bold; }
-        #playerTarget { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; }
+        
+        #playerTarget { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; position: relative; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; margin-top: 20px; }
-        .ep-node { background: #222; padding: 10px; text-align: center; border-radius: 4px; cursor: pointer; }
-        .ep-node.active { background: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
+
 <header>
-    <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
-    <div>
-        <span class="nav-link" onclick="showPage('home')">Home</span>
-        <span class="nav-link" onclick="showPage('dashboard')">Continue Watching</span>
+    <div class="nav-top">
+        <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
+        <div class="nav-links">
+            <span class="nav-link" onclick="showPage('home')">Home</span>
+            <span class="nav-link" onclick="showPage('dashboard')">Continue Watching</span>
+        </div>
+    </div>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for movies or shows..." oninput="handleSearch(this.value)">
+        <div id="searchDropdown"></div>
     </div>
 </header>
 
 <div id="home" class="page active"><div id="trendingGrid" class="card-grid"></div></div>
-<div id="dashboard" class="page">
-    <button onclick="localStorage.removeItem('sp_v10'); renderDashboard();" style="margin-bottom:10px;">Clear History</button>
-    <div id="continueGrid" class="card-grid"></div>
-</div>
-
+<div id="dashboard" class="page"><div id="continueGrid" class="card-grid"></div></div>
 <div id="playerPage" class="page">
     <div id="playerTarget">
         <div class="video-wrapper">
@@ -47,43 +66,65 @@
     </div>
     <div id="tvControls" style="display:none; margin-top: 20px;">
         <select id="seasonSelect" style="width:100%; padding:10px;" onchange="loadSeason()"></select>
-        <div id="epGrid" class="ep-grid"></div>
+        <div id="epGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; margin-top: 15px;"></div>
     </div>
 </div>
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
-    let tracker;
-
-    // Fixed native fullscreen listener
-    document.addEventListener('fullscreenchange', () => {
-        if (document.fullscreenElement && screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock("landscape").catch(() => {});
-        }
-    });
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         if(id === 'dashboard') renderDashboard();
-        if(id !== 'playerPage') clearInterval(tracker);
+        document.getElementById('searchDropdown').style.display = 'none';
     }
 
+    // Live Search Feature
+    async function handleSearch(query) {
+        const dropdown = document.getElementById('searchDropdown');
+        if (query.length < 2) { dropdown.style.display = 'none'; return; }
+
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${query}`);
+        const data = await res.json();
+        
+        dropdown.innerHTML = '';
+        if (data.results.length > 0) {
+            dropdown.style.display = 'block';
+            data.results.slice(0, 8).forEach(item => {
+                if (!item.poster_path) return;
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.onclick = () => {
+                    startApp(item.id, item.media_type || 'movie', item.title || item.name, item.poster_path);
+                    dropdown.style.display = 'none';
+                    document.getElementById('searchInput').value = '';
+                };
+                div.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w92${item.poster_path}">
+                    <span>${item.title || item.name}</span>
+                `;
+                dropdown.appendChild(div);
+            });
+        }
+    }
+
+    // Trending Loader
     fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r => r.json()).then(d => {
         d.results.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.onclick = () => start(m.id, m.media_type || 'movie', m.title || m.name, m.poster_path);
+            card.onclick = () => startApp(m.id, m.media_type || 'movie', m.title || m.name, m.poster_path);
             card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
             document.getElementById('trendingGrid').appendChild(card);
         });
     });
 
-    async function start(id, type, title, poster) {
+    async function startApp(id, type, title, poster) {
         cur = { id, type, title, poster, s: 1, e: 1 };
-        const hist = JSON.parse(localStorage.getItem('sp_v10')) || {};
-        if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; }
+        const history = JSON.parse(localStorage.getItem('sp_final')) || {};
+        if(history[id]) { cur.s = history[id].s; cur.e = history[id].e; }
 
         if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
@@ -93,44 +134,37 @@
             loadSeason(true);
         } else {
             document.getElementById('tvControls').style.display = 'none';
-            update();
+            updateFrame();
         }
         showPage('playerPage');
-        tracker = setInterval(save, 5000);
     }
 
     async function loadSeason(init = false) {
         cur.s = document.getElementById('seasonSelect').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
         document.getElementById('epGrid').innerHTML = r.episodes.map(ep => `
-            <div class="ep-node ${ep.episode_number == cur.e ? 'active' : ''}" onclick="cur.e=${ep.episode_number}; update();">
-                ${ep.episode_number}
-            </div>
+            <div style="background:#222; padding:10px; text-align:center; cursor:pointer;" onclick="cur.e=${ep.episode_number}; updateFrame();">${ep.episode_number}</div>
         `).join('');
         if(!init) cur.e = 1;
-        update();
+        updateFrame();
     }
 
-    function update() {
+    function updateFrame() {
         document.getElementById('mainFrame').src = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
-        save();
-    }
-
-    function save() {
-        const hist = JSON.parse(localStorage.getItem('sp_v10')) || {};
-        hist[cur.id] = { ...cur, stamp: Date.now() };
-        localStorage.setItem('sp_v10', JSON.stringify(hist));
+        const history = JSON.parse(localStorage.getItem('sp_final')) || {};
+        history[cur.id] = { ...cur, stamp: Date.now() };
+        localStorage.setItem('sp_final', JSON.stringify(history));
     }
 
     function renderDashboard() {
         const grid = document.getElementById('continueGrid');
         grid.innerHTML = '';
-        const items = Object.values(JSON.parse(localStorage.getItem('sp_v10')) || {}).sort((a,b) => b.stamp - a.stamp);
+        const items = Object.values(JSON.parse(localStorage.getItem('sp_final')) || {}).sort((a,b) => b.stamp - a.stamp);
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.onclick = () => start(m.id, m.type, m.title, m.poster);
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}"><div class="progress-tag">${m.type==='tv' ? `S${m.s}:E${m.e}` : 'RESUME'}</div>`;
+            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}">`;
             grid.appendChild(card);
         });
     }
