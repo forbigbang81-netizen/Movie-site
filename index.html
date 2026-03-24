@@ -20,17 +20,17 @@
             background: #111; border: 1px solid #333; max-height: 400px; 
             overflow-y: auto; display: none; z-index: 2000; border-radius: 0 0 6px 6px;
         }
-        .dropdown-section-title { padding: 10px; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; background: #0a0a0a; }
+        .dropdown-section-title { padding: 10px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; background: #0a0a0a; }
         .search-item { padding: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #1a1a1a; }
         .search-item:hover { background: #222; }
         .search-item img { width: 40px; height: 60px; object-fit: cover; border-radius: 2px; }
 
-        .genre-pill { display: inline-block; padding: 6px 12px; background: #222; border-radius: 20px; font-size: 12px; margin: 5px; cursor: pointer; transition: 0.2s; }
-        .genre-pill:hover { background: var(--accent); }
+        .genre-pill { display: inline-block; padding: 6px 14px; background: #222; border-radius: 20px; font-size: 12px; margin: 5px; cursor: pointer; transition: 0.2s; border: 1px solid #333; }
+        .genre-pill:hover { background: var(--accent); border-color: var(--accent); }
+        .random-btn { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
 
         .nav-links { display: flex; gap: 15px; }
         .nav-link { color: #b3b3b3; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .nav-link.active { color: #fff; }
 
         .page { display: none; padding: 20px 5%; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
@@ -38,14 +38,17 @@
 
         h2 { font-size: 18px; margin: 20px 0 15px 0; color: #fff; }
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; transition: 0.3s; }
-        .movie-card:active { transform: scale(0.95); }
+        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
         .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px; text-align: center; font-weight: bold; }
 
         #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
-        .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
+        
+        /* CRITICAL: Working Fullscreen Permissions */
+        .video-wrapper iframe { 
+            position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; 
+        }
     </style>
 </head>
 <body>
@@ -54,19 +57,21 @@
     <div class="nav-top">
         <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
         <div class="nav-links">
-            <span class="nav-link" id="l-home" onclick="showPage('home')">Home</span>
-            <span class="nav-link" id="l-dash" onclick="showPage('dashboard')">History</span>
+            <span class="nav-link" onclick="showPage('home')">Home</span>
+            <span class="nav-link" onclick="showPage('dashboard')">History</span>
         </div>
     </div>
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search movies, shows, or genres..." oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)">
+        <input type="text" id="searchInput" placeholder="Search movies, anime, or genres..." oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)">
         <div id="searchDropdown"></div>
     </div>
 </header>
 
 <div id="home" class="page active">
-    <h2>Browse by Genre</h2>
-    <div id="genreList" style="margin-bottom: 20px;"></div>
+    <h2>Categories</h2>
+    <div id="genreList" style="margin-bottom: 20px;">
+        <span class="genre-pill random-btn" onclick="getRandom()">🎲 Random Anime</span>
+    </div>
     
     <h2 id="homeTitle">Trending Now</h2>
     <div id="trendingGrid" class="card-grid"></div>
@@ -82,8 +87,8 @@
 
 <div id="playerPage" class="page">
     <div id="playerContainer">
-        <div class="video-wrapper">
-            <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; fullscreen; storage-access"></iframe>
+        <div class="video-wrapper" id="frameWrapper">
+            <iframe id="mainFrame" src="" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen; storage-access"></iframe>
         </div>
     </div>
     <div id="tvControls" style="display:none; margin-top: 20px;">
@@ -95,21 +100,26 @@
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
     const GENRES = [
-        {id: 28, name: "Action"}, {id: 35, name: "Comedy"}, {id: 27, name: "Horror"}, 
-        {id: 10749, name: "Romance"}, {id: 878, name: "Sci-Fi"}, {id: 18, name: "Drama"}
+        {id: 16, name: "Anime"}, {id: 28, name: "Action"}, {id: 27, name: "Horror"}, 
+        {id: 878, name: "Sci-Fi"}, {id: 35, name: "Comedy"}, {id: 18, name: "Drama"}
     ];
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
+    // Native Fullscreen Orientation Lock
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement && screen.orientation) {
+            screen.orientation.lock("landscape").catch(() => {});
+        }
+    });
+
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'home') document.getElementById('l-home').classList.add('active');
-        if(id === 'dashboard') { renderDashboard(); document.getElementById('l-dash').classList.add('active'); }
+        if(id === 'dashboard') renderDashboard();
         document.getElementById('searchDropdown').style.display = 'none';
+        if(id !== 'playerPage') document.getElementById('mainFrame').src = ''; 
     }
 
-    // Initialize Genres on Home
     const genreDiv = document.getElementById('genreList');
     GENRES.forEach(g => {
         const span = document.createElement('span');
@@ -119,29 +129,32 @@
         genreDiv.appendChild(span);
     });
 
+    async function getRandom() {
+        const res = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&sort_by=popularity.desc`);
+        const data = await res.json();
+        const rand = data.results[Math.floor(Math.random() * data.results.length)];
+        startApp(rand.id, 'tv', rand.name, rand.poster_path);
+    }
+
     async function handleSearch(query) {
         const dropdown = document.getElementById('searchDropdown');
         dropdown.innerHTML = '';
-        
         if (query.length < 1) {
             dropdown.style.display = 'block';
-            dropdown.innerHTML = '<div class="dropdown-section-title">Popular Genres</div>';
+            dropdown.innerHTML = '<div class="dropdown-section-title">Categories</div>';
             GENRES.forEach(g => {
                 const div = document.createElement('div');
                 div.className = 'search-item';
-                div.innerHTML = `<span>🔍 ${g.name}</span>`;
+                div.innerHTML = `<span>✨ ${g.name}</span>`;
                 div.onclick = () => { loadGenre(g.id, g.name); dropdown.style.display = 'none'; };
                 dropdown.appendChild(div);
             });
             return;
         }
-
         const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${query}`);
         const data = await res.json();
-        
         if (data.results.length > 0) {
             dropdown.style.display = 'block';
-            dropdown.innerHTML = '<div class="dropdown-section-title">Results</div>';
             data.results.slice(0, 6).forEach(item => {
                 if (!item.poster_path) return;
                 const div = document.createElement('div');
@@ -154,33 +167,33 @@
     }
 
     async function loadGenre(id, name) {
-        document.getElementById('homeTitle').innerText = `${name} Movies`;
-        const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${id}`);
+        document.getElementById('homeTitle').innerText = `${name} Collection`;
+        const endpoint = id === 16 ? 'tv' : 'movie';
+        const res = await fetch(`https://api.themoviedb.org/3/discover/${endpoint}?api_key=${API_KEY}&with_genres=${id}`);
         const data = await res.json();
-        renderGrid('trendingGrid', data.results);
+        renderGrid('trendingGrid', data.results, id === 16 ? 'tv' : 'movie');
         showPage('home');
     }
 
-    function renderGrid(targetId, results) {
+    function renderGrid(targetId, results, forceType = null) {
         const grid = document.getElementById(targetId);
         grid.innerHTML = '';
         results.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.onclick = () => startApp(m.id, m.media_type || 'movie', m.title || m.name, m.poster_path);
+            const type = forceType || m.media_type || 'movie';
+            card.onclick = () => startApp(m.id, type, m.title || m.name, m.poster_path);
             card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
             grid.appendChild(card);
         });
     }
 
-    // Default Trending
     fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r => r.json()).then(d => renderGrid('trendingGrid', d.results));
 
     async function startApp(id, type, title, poster) {
         cur = { id, type, title, poster, s: 1, e: 1 };
-        const hist = JSON.parse(localStorage.getItem('sp_final_v11')) || {};
+        const hist = JSON.parse(localStorage.getItem('sp_v13')) || {};
         if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; }
-
         if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
             const r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`).then(res => res.json());
@@ -198,7 +211,7 @@
         cur.s = document.getElementById('seasonSelect').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
         document.getElementById('epGrid').innerHTML = r.episodes.map(ep => `
-            <div style="background:#222; padding:10px; text-align:center; cursor:pointer;" onclick="cur.e=${ep.episode_number}; updateFrame();">${ep.episode_number}</div>
+            <div style="background:#222; padding:10px; text-align:center; cursor:pointer; border-radius:4px;" onclick="cur.e=${ep.episode_number}; updateFrame();">${ep.episode_number}</div>
         `).join('');
         if(!init) cur.e = 1;
         updateFrame();
@@ -206,15 +219,15 @@
 
     function updateFrame() {
         document.getElementById('mainFrame').src = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
-        const hist = JSON.parse(localStorage.getItem('sp_final_v11')) || {};
+        const hist = JSON.parse(localStorage.getItem('sp_v13')) || {};
         hist[cur.id] = { ...cur, stamp: Date.now() };
-        localStorage.setItem('sp_final_v11', JSON.stringify(hist));
+        localStorage.setItem('sp_v13', JSON.stringify(hist));
     }
 
     function renderDashboard() {
         const grid = document.getElementById('continueGrid');
         grid.innerHTML = '';
-        const items = Object.values(JSON.parse(localStorage.getItem('sp_final_v11')) || {}).sort((a,b) => b.stamp - a.stamp);
+        const items = Object.values(JSON.parse(localStorage.getItem('sp_v13')) || {}).sort((a,b) => b.stamp - a.stamp);
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
@@ -224,7 +237,7 @@
         });
     }
 
-    function clearHistory() { if(confirm("Clear history?")) { localStorage.removeItem('sp_final_v11'); renderDashboard(); } }
+    function clearHistory() { if(confirm("Clear history?")) { localStorage.removeItem('sp_v13'); renderDashboard(); } }
 </script>
 </body>
 </html>
