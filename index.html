@@ -15,10 +15,8 @@
         .search-container { position: relative; width: 100%; }
         #searchInput { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
         #searchDropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid #333; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; border-radius: 0 0 6px 6px; }
-        .search-item { padding: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #1a1a1a; }
 
         .genre-row { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
-        .genre-row::-webkit-scrollbar { display: none; }
         .genre-pill { white-space: nowrap; padding: 6px 14px; background: #222; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #333; }
 
         .page { display: none; padding: 20px 5%; animation: fadeIn 0.3s ease; }
@@ -74,9 +72,8 @@
             <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
         </div>
     </div>
-
     <div id="tvControls" style="display:none;">
-        <h3 id="playerMeta" style="margin:15px 0; font-size:15px;"></h3>
+        <h3 id="playerMeta" style="margin:10px 0; font-size:15px;"></h3>
         <select id="seasonSelect" style="width:100%; padding:12px; background:#111; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
         <div id="epGrid" class="ep-grid"></div>
     </div>
@@ -84,10 +81,12 @@
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAMPRO_V1_STABLE'; 
+    // LOCK THIS KEY - DO NOT CHANGE IN FUTURE UPDATES
+    const DB_KEY = 'STREAMPRO_STABLE_v10'; 
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
+    // This runs immediately
     window.onload = () => { 
         renderDashboard(); 
         fetchTrending(); 
@@ -139,10 +138,12 @@
     }
 
     function updateFrame() {
+        // vidsrc typically handles sub/dub internally via their own player UI settings
         const url = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
         document.getElementById('mainFrame').src = url;
         document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type==='tv' ? `- S${cur.s} E${cur.e}` : ''}`;
         
+        // Save to browser storage
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         hist[cur.id] = { ...cur, stamp: Date.now() };
         localStorage.setItem(DB_KEY, JSON.stringify(hist));
@@ -158,14 +159,20 @@
 
     function renderDashboard() {
         const grid = document.getElementById('continueGrid');
-        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        const rawData = localStorage.getItem(DB_KEY);
+        const data = rawData ? JSON.parse(rawData) : {};
         const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
+        
         grid.innerHTML = items.length ? '' : '<p style="color:#666; font-size:12px;">No history.</p>';
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
             card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
-            card.innerHTML = `<button class="remove-btn" onclick="removeHistory('${m.id}', event)">×</button><img src="https://image.tmdb.org/t/p/w342${m.poster}"><div class="progress-tag">${m.type==='tv' ? `S${m.s}:E${m.e}` : 'RESUME'}</div>`;
+            card.innerHTML = `
+                <button class="remove-btn" onclick="removeHistory('${m.id}', event)">×</button>
+                <img src="https://image.tmdb.org/t/p/w342${m.poster}">
+                <div class="progress-tag">${m.type==='tv' ? `S${m.s}:E${m.e}` : 'RESUME'}</div>
+            `;
             grid.appendChild(card);
         });
     }
@@ -189,7 +196,7 @@
     }
 
     async function handleSearch(q) {
-        if(q.length<2) return;
+        if(q.length<2) { document.getElementById('searchDropdown').style.display='none'; return; }
         const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`);
         const data = await res.json();
         const drop = document.getElementById('searchDropdown');
