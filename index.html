@@ -3,56 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite | WatchMode</title>
+    <title>StreamPro Elite | Live Search</title>
     <style>
         :root {
             --bg: #050505;
             --surface: #111111;
             --accent: #e50914;
-            --accent-glow: rgba(229, 9, 20, 0.4);
             --text: #ffffff;
-            --glass: rgba(10, 10, 10, 0.95);
+            --glass: rgba(15, 15, 15, 0.95);
         }
 
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
             overflow-x: hidden;
         }
 
-        /* Sidebar Navigation */
-        .sidebar {
-            position: fixed;
-            left: -280px; top: 0; width: 280px; height: 100%;
-            background: var(--surface);
-            z-index: 2000;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 20px 0 50px rgba(0,0,0,0.8);
-            padding: 30px 20px;
-            box-sizing: border-box;
-            border-right: 1px solid #222;
-        }
-        .sidebar.open { left: 0; }
-        .sidebar-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 1999;
-            display: none;
-            backdrop-filter: blur(5px);
-        }
-        .sidebar-header { font-size: 24px; font-weight: 900; color: var(--accent); margin-bottom: 40px; }
-        .side-item {
-            padding: 15px; margin-bottom: 10px; border-radius: 12px;
-            font-weight: 700; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 15px;
-        }
-        .side-item:hover { background: rgba(255,255,255,0.05); }
-        .side-item.active { background: var(--accent); color: white; }
-
-        /* Fixed Header */
+        /* Header & Sidebar */
         header {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -60,193 +29,200 @@
             position: fixed;
             top: 0; width: 100%;
             z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
             display: flex; justify-content: space-between; align-items: center;
             box-sizing: border-box;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .nav-brand { font-size: 22px; font-weight: 900; color: var(--accent); cursor: pointer; }
 
-        /* Search & Layout */
-        .main-content { padding: 80px 5% 50px; }
-        .search-container { margin-bottom: 25px; }
+        /* Sidebar */
+        .sidebar {
+            position: fixed; left: -280px; top: 0; width: 280px; height: 100%;
+            background: var(--surface); z-index: 2000; transition: 0.4s;
+            padding: 30px 20px; box-sizing: border-box; border-right: 1px solid #222;
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 1999; display: none; backdrop-filter: blur(5px);
+        }
+
+        /* Search Bar & Live Dropdown */
+        .search-wrapper { position: relative; width: 100%; margin-top: 80px; padding: 0 5%; box-sizing: border-box; }
         .search-input {
             width: 100%; background: #1a1a1a; border: 1px solid #333;
-            color: #fff; padding: 15px 20px; border-radius: 14px;
-            font-size: 15px; outline: none; transition: 0.3s;
+            color: #fff; padding: 15px 20px; border-radius: 12px;
+            font-size: 16px; outline: none; transition: 0.3s;
         }
-        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+        .search-input:focus { border-color: var(--accent); }
 
-        .section-title { font-size: 20px; font-weight: 800; margin: 30px 0 15px; display: flex; align-items: center; gap: 10px; }
-        .section-title::before { content: ''; width: 4px; height: 20px; background: var(--accent); border-radius: 4px; }
-
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 15px; }
-        .movie-card {
-            background: #1a1a1a; border-radius: 15px; overflow: hidden;
-            aspect-ratio: 2/3; cursor: pointer; transition: 0.4s ease;
+        .search-dropdown {
+            position: absolute; top: 60px; left: 5%; right: 5%;
+            background: var(--glass); border: 1px solid #333;
+            border-radius: 12px; z-index: 5000; max-height: 400px;
+            overflow-y: auto; display: none; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        .movie-card:hover { transform: translateY(-10px); }
+        .search-item {
+            display: flex; align-items: center; gap: 15px; padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;
+        }
+        .search-item:hover { background: rgba(255,255,255,0.1); }
+        .search-item img { width: 45px; height: 65px; border-radius: 4px; object-fit: cover; }
+        .search-item .info h4 { margin: 0; font-size: 14px; }
+        .search-item .info span { font-size: 12px; opacity: 0.6; }
+
+        /* Layout */
+        .main-content { padding: 20px 5% 50px; }
+        .section-title { font-size: 18px; font-weight: 800; margin: 20px 0; border-left: 4px solid var(--accent); padding-left: 10px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+        .movie-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; transition: 0.3s; }
+        .movie-card:hover { transform: translateY(-5px); }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Player Experience */
-        .player-box {
-            width: 100%; aspect-ratio: 16/9; background: #000;
-            border-radius: 18px; overflow: hidden; border: 1px solid #222;
-        }
+        /* Player */
+        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 15px; overflow: hidden; }
         iframe { width: 100%; height: 100%; border: none; }
-
-        .srv-selector { display: flex; gap: 10px; margin: 20px 0; }
-        .srv-pill {
-            flex: 1; padding: 14px; border-radius: 10px; border: 1px solid #333;
-            background: #1a1a1a; color: #fff; font-weight: 800; cursor: pointer;
-            font-size: 12px; transition: 0.3s;
-        }
-        .srv-pill.active { background: var(--accent); border-color: var(--accent); }
-
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 10px; margin-top: 20px; }
-        .ep-node {
-            background: #1a1a1a; padding: 15px 0; text-align: center;
-            border-radius: 10px; cursor: pointer; border: 1px solid #333; font-weight: 800;
-        }
-        .ep-node.active { background: var(--accent); border-color: var(--accent); }
-
+        
         .page { display: none; }
         .page.active { display: block; }
+        
+        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; margin-top: 15px; }
+        .ep-btn { background: #1a1a1a; padding: 10px; text-align: center; border-radius: 6px; cursor: pointer; border: 1px solid #333; font-weight: bold; }
+        .ep-btn.active { background: var(--accent); border-color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">MENU</div>
-    <div class="side-item active" onclick="filterGenre('all', this)">Trending</div>
-    <div class="side-item" onclick="filterGenre('16', this)">Anime</div>
-    <div class="side-item" onclick="filterGenre('28', this)">Action</div>
-    <div class="side-item" onclick="filterGenre('27', this)">Horror</div>
-    <div class="side-item" onclick="filterGenre('878', this)">Sci-Fi</div>
-    <div class="side-item" onclick="filterGenre('35', this)">Comedy</div>
-    <hr style="opacity: 0.1; margin: 20px 0;">
-    <div class="side-item" onclick="showPage('dashboard')">Watch History</div>
+    <div style="font-size: 24px; font-weight: 900; color: var(--accent); margin-bottom: 30px;">STREAMPRO</div>
+    <div onclick="location.reload()" style="padding:15px; cursor:pointer; font-weight:bold;">Home</div>
+    <div onclick="showPage('dashboard')" style="padding:15px; cursor:pointer; font-weight:bold;">Watch History</div>
 </div>
 
 <header>
     <div class="nav-brand" onclick="toggleSidebar()">STREAMPRO ☰</div>
-    <div style="font-size: 14px; font-weight: 700; opacity: 0.6;" onclick="showPage('dashboard')">HISTORY</div>
+    <div onclick="showPage('dashboard')" style="font-weight: bold; opacity: 0.7;">HISTORY</div>
 </header>
+
+<div class="search-wrapper">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search movies, TV, anime..." oninput="handleLiveSearch(this.value)">
+    <div id="searchDropdown" class="search-dropdown"></div>
+</div>
 
 <div class="main-content">
     <div id="home" class="page active">
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="Search movies or anime..." oninput="handleSearch(this.value)">
-        </div>
-        
         <div id="continueSection" style="display:none;">
-            <div class="section-title">Jump Back In</div>
+            <div class="section-title">Continue Watching</div>
             <div id="continueGrid" class="card-grid" style="grid-template-columns: repeat(2, 1fr);"></div>
         </div>
-
-        <div class="section-title" id="gridTitle">Popular Now</div>
+        <div class="section-title">Trending Now</div>
         <div id="mainGrid" class="card-grid"></div>
     </div>
 
     <div id="dashboard" class="page">
-        <div class="section-title">Viewing History</div>
+        <div class="section-title">Your History</div>
         <div id="historyGrid" class="card-grid"></div>
     </div>
 
     <div id="playerPage" class="page">
-        <div class="player-box">
-            <iframe id="mainFrame" src="" allowfullscreen></iframe>
-        </div>
-        <div class="srv-selector">
-            <button id="s1" class="srv-pill active" onclick="setServer('vidsrc')">SERVER 1</button>
-            <button id="s2" class="srv-pill" onclick="setServer('watchmode')">SERVER 2 (API)</button>
-        </div>
-        <h2 id="mediaTitle" style="margin:0; font-size: 24px;">Loading...</h2>
-        <div id="tvUI" style="display:none; margin-top: 30px;">
-            <select id="seasonSelect" style="width:100%; padding:15px; background:#1a1a1a; color:white; border:1px solid #333; border-radius:12px; font-weight:bold;" onchange="loadSeason()"></select>
-            <div class="ep-grid" id="epGrid"></div>
+        <div class="player-container"><iframe id="videoFrame" src="" allowfullscreen></iframe></div>
+        <h2 id="mediaTitle" style="margin: 20px 0 10px;">Loading...</h2>
+        <div id="tvUI" style="display:none;">
+            <select id="seasonSelect" style="width:100%; padding:12px; background:#1a1a1a; color:white; border-radius:8px; border:1px solid #333;" onchange="changeSeason()"></select>
+            <div id="epGrid" class="ep-grid"></div>
         </div>
     </div>
 </div>
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAM_ELITE_V6';
-    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', srv: 'vidsrc' };
+    const DB_KEY = 'STREAM_ELITE_SEARCH_V1';
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
-    window.onload = () => { fetchMovies('trending/all/day'); refreshHistory(); };
+    window.onload = () => { fetchInitial(); refreshHistory(); };
 
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('open');
-        const overlay = document.getElementById('overlay');
-        overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        const ov = document.getElementById('overlay');
+        ov.style.display = ov.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function fetchMovies(path) {
-        const r = await fetch(`https://api.themoviedb.org/3/${path}${path.includes('?') ? '&' : '?'}api_key=${API_KEY}`);
+    async function fetchInitial() {
+        const r = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`);
         const d = await r.json();
         renderGrid(d.results, 'mainGrid');
     }
 
-    function renderGrid(data, target) {
-        const g = document.getElementById(target); g.innerHTML = '';
-        data.forEach(m => {
-            if(!m.poster_path) return;
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}" loading="lazy">`;
-            card.onclick = () => initPlayer(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
-            g.appendChild(card);
-        });
+    // --- LIVE SEARCH LOGIC ---
+    async function handleLiveSearch(q) {
+        const drop = document.getElementById('searchDropdown');
+        if (q.length < 2) { drop.style.display = 'none'; return; }
+
+        const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(q)}`);
+        const d = await r.json();
+        const results = d.results.filter(i => i.poster_path).slice(0, 6);
+
+        if (results.length > 0) {
+            drop.innerHTML = results.map(i => `
+                <div class="search-item" onclick="startMedia('${i.id}', '${i.media_type || (i.title ? 'movie' : 'tv')}', '${(i.title || i.name).replace(/'/g, "\\'")}', '${i.poster_path}')">
+                    <img src="https://image.tmdb.org/t/p/w92${i.poster_path}">
+                    <div class="info">
+                        <h4>${i.title || i.name}</h4>
+                        <span>${(i.release_date || i.first_air_date || '').split('-')[0]} • ${i.media_type || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+            drop.style.display = 'block';
+        } else {
+            drop.style.display = 'none';
+        }
     }
 
-    function initPlayer(id, type, title, poster) {
-        cur = { id, type, title, poster, s: 1, e: 1, srv: 'vidsrc' };
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-wrapper')) document.getElementById('searchDropdown').style.display = 'none';
+    });
+
+    function startMedia(id, type, title, poster) {
+        document.getElementById('searchDropdown').style.display = 'none';
+        document.getElementById('searchInput').value = '';
+        
+        cur = { id, type, title, poster, s: 1, e: 1 };
         const saved = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(saved[id]) { cur.s = saved[id].s; cur.e = saved[id].e; }
+        
         showPage('playerPage');
         updateFrame();
-        if(type === 'tv') loadTVControls();
+        if(type === 'tv') loadTV();
     }
 
     function updateFrame() {
-        const f = document.getElementById('mainFrame');
+        const f = document.getElementById('videoFrame');
         const path = cur.type === 'tv' ? `${cur.id}/${cur.s}/${cur.e}` : cur.id;
-        
-        // Both servers now use your specified API context for routing
-        f.src = cur.srv === 'vidsrc' 
-            ? `https://vidsrc.me/embed/${cur.type}/${path}`
-            : `https://vidsrc.to/embed/${cur.type}/${path}`;
-        
+        f.src = `https://vidsrc.me/embed/${cur.type}/${path}`;
         document.getElementById('mediaTitle').innerText = `${cur.title} ${cur.type === 'tv' ? `(S${cur.s}:E${cur.e})` : ''}`;
-        saveHistory();
+        saveProgress();
     }
 
-    function setServer(s) {
-        cur.srv = s;
-        document.getElementById('s1').classList.toggle('active', s === 'vidsrc');
-        document.getElementById('s2').classList.toggle('active', s === 'watchmode');
-        updateFrame();
-    }
-
-    async function loadTVControls() {
+    async function loadTV() {
         document.getElementById('tvUI').style.display = 'block';
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}?api_key=${API_KEY}`).then(res => res.json());
         document.getElementById('seasonSelect').innerHTML = r.seasons.filter(s => s.season_number > 0)
             .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
-        loadSeason(true);
+        changeSeason(true);
     }
 
-    async function loadSeason(init = false) {
+    async function changeSeason(init = false) {
         cur.s = document.getElementById('seasonSelect').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
-        const grid = document.getElementById('epGrid'); grid.innerHTML = '';
+        const g = document.getElementById('epGrid'); g.innerHTML = '';
         r.episodes.forEach(ep => {
-            const div = document.createElement('div');
-            div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
-            div.innerText = ep.episode_number;
-            div.onclick = () => { cur.e = ep.episode_number; updateFrame(); loadSeason(true); };
-            grid.appendChild(div);
+            const d = document.createElement('div');
+            d.className = `ep-btn ${ep.episode_number == cur.e ? 'active' : ''}`;
+            d.innerText = ep.episode_number;
+            d.onclick = () => { cur.e = ep.episode_number; updateFrame(); changeSeason(true); };
+            g.appendChild(d);
         });
         if(!init) { cur.e = 1; updateFrame(); }
     }
@@ -254,21 +230,21 @@
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id !== 'playerPage') document.getElementById('mainFrame').src = '';
         window.scrollTo(0,0);
     }
 
-    function filterGenre(id, el) {
-        document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('gridTitle').innerText = el.innerText;
-        const path = id === 'all' ? 'trending/all/day' : `discover/movie?with_genres=${id}`;
-        fetchMovies(path);
-        showPage('home');
-        toggleSidebar();
+    function renderGrid(data, target) {
+        const g = document.getElementById(target); g.innerHTML = '';
+        data.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
+            card.onclick = () => startMedia(m.id, m.media_type || (m.title ? 'movie' : 'tv'), (m.title || m.name), m.poster_path);
+            g.appendChild(card);
+        });
     }
 
-    function saveHistory() {
+    function saveProgress() {
         const db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         db[cur.id] = { ...cur, stamp: Date.now() };
         localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -280,29 +256,22 @@
         const items = Object.values(db).sort((a,b) => b.stamp - a.stamp);
         
         const contSec = document.getElementById('continueSection');
-        const contGrid = document.getElementById('continueGrid');
         if(items.length > 0) {
             contSec.style.display = 'block';
-            contGrid.innerHTML = '';
-            items.slice(0, 2).forEach(m => contGrid.appendChild(createCard(m)));
+            const cg = document.getElementById('continueGrid'); cg.innerHTML = '';
+            items.slice(0, 2).forEach(m => cg.appendChild(createCard(m)));
         }
-
-        const histGrid = document.getElementById('historyGrid');
-        histGrid.innerHTML = '';
-        items.forEach(m => histGrid.appendChild(createCard(m)));
+        
+        const hg = document.getElementById('historyGrid'); hg.innerHTML = '';
+        items.forEach(m => hg.appendChild(createCard(m)));
     }
 
     function createCard(m) {
         const d = document.createElement('div');
         d.className = 'movie-card';
         d.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}">`;
-        d.onclick = () => initPlayer(m.id, m.type, m.title, m.poster);
+        d.onclick = () => startMedia(m.id, m.type, m.title, m.poster);
         return d;
-    }
-
-    async function handleSearch(q) {
-        if(q.length < 2) return;
-        fetchMovies(`search/multi?query=${encodeURIComponent(q)}`);
     }
 </script>
 </body>
