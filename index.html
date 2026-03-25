@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite | WatchMode Premium</title>
+    <title>StreamPro Elite | Ultra</title>
     <style>
         :root {
             --bg: #050505;
@@ -11,7 +11,7 @@
             --accent: #e50914;
             --accent-glow: rgba(229, 9, 20, 0.4);
             --text: #ffffff;
-            --glass: rgba(10, 10, 10, 0.8);
+            --glass: rgba(10, 10, 10, 0.9);
         }
 
         body {
@@ -20,14 +20,12 @@
             font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Smooth Glass Header */
+        /* Fixed Header - No more overlapping */
         header {
             background: var(--glass);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(20px);
             padding: 12px 5%;
             position: fixed;
             top: 0; width: 100%;
@@ -36,84 +34,82 @@
             box-sizing: border-box;
         }
 
-        .header-container { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-        .nav-brand { font-size: 22px; font-weight: 900; color: var(--accent); cursor: pointer; letter-spacing: -1px; }
+        .header-container { display: flex; align-items: center; justify-content: space-between; }
+        .nav-brand { font-size: 22px; font-weight: 900; color: var(--accent); cursor: pointer; text-transform: uppercase; }
+        
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .nav-link { font-size: 14px; font-weight: 600; cursor: pointer; opacity: 0.8; transition: 0.3s; }
+        .nav-link:hover { opacity: 1; color: var(--accent); }
 
-        /* Genre Pill Navigation */
-        .genre-bar {
-            display: flex; gap: 10px; overflow-x: auto; padding: 15px 5% 5px;
-            margin-top: 70px; scrollbar-width: none;
+        /* Search Bar Elite */
+        .search-area { padding: 80px 5% 10px; }
+        .search-input {
+            width: 100%; background: #1a1a1a; border: 1px solid #333;
+            color: #fff; padding: 12px 15px; border-radius: 10px;
+            font-size: 14px; outline: none; transition: 0.3s;
         }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
+        /* Genre Bar */
+        .genre-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5%; scrollbar-width: none; }
         .genre-bar::-webkit-scrollbar { display: none; }
         .pill {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 13px;
-            font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.3s;
+            background: #1a1a1a; border: 1px solid #333; padding: 8px 18px;
+            border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+            white-space: nowrap; transition: 0.3s;
         }
-        .pill.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 15px var(--accent-glow); }
+        .pill.active { background: var(--accent); border-color: var(--accent); }
 
-        /* Page Transitions */
-        .page { 
-            display: none; padding: 20px 5% 50px; 
-            opacity: 0; transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
+        /* Content Pages */
+        .page { display: none; padding: 10px 5% 50px; opacity: 0; transform: translateY(10px); transition: 0.4s ease; }
         .page.active { display: block; opacity: 1; transform: translateY(0); }
 
-        /* Cinematic Staggered Grid */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
-        
+        /* Movie Cards */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
         .movie-card {
             background: var(--surface); border-radius: 12px; overflow: hidden;
-            aspect-ratio: 2/3; cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            animation: cardIn 0.6s ease backwards;
+            aspect-ratio: 2/3; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes cardIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        .movie-card:hover { transform: scale(1.06); z-index: 10; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        .movie-card:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Advanced Player */
-        .player-container {
+        /* Advanced Player Container */
+        .player-box {
             width: 100%; aspect-ratio: 16/9; background: #000;
-            border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+            border-radius: 15px; overflow: hidden; border: 1px solid #333;
         }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Anime Style Episode Grid */
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin-top: 20px; }
+        /* Anime Episode Nodes */
+        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; margin-top: 20px; }
         .ep-node {
-            background: #181818; padding: 12px 0; border-radius: 8px;
-            text-align: center; cursor: pointer; border: 1px solid #252525;
-            transition: 0.2s; font-weight: 800; font-size: 14px;
+            background: #1a1a1a; padding: 12px 0; text-align: center;
+            border-radius: 8px; cursor: pointer; border: 1px solid #333;
+            font-weight: 800; font-size: 13px; transition: 0.2s;
         }
-        .ep-node.active { background: var(--accent); border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 15px var(--accent-glow); }
-        
-        .search-box input {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 10px 15px; border-radius: 8px; width: 150px; transition: 0.3s;
-        }
-        .search-box input:focus { width: 220px; border-color: var(--accent); outline: none; }
+        .ep-node.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-container">
-        <div class="nav-brand" onclick="location.reload()">STREAMPRO</div>
-        <div class="search-box">
-            <input type="text" placeholder="Search..." oninput="handleSearch(this.value)">
+        <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
+        <div class="nav-right">
+            <span class="nav-link" onclick="showPage('home')">Home</span>
+            <span class="nav-link" onclick="showPage('dashboard')">History</span>
         </div>
-        <button class="pill" style="padding: 6px 15px;" onclick="showPage('dashboard')">History</button>
     </div>
 </header>
 
-<div class="genre-bar" id="genreBar">
+<div class="search-area">
+    <input type="text" class="search-input" placeholder="Search titles..." oninput="handleSearch(this.value)">
+</div>
+
+<div class="genre-bar">
     <div class="pill active" onclick="filterGenre('all', this)">Trending</div>
-    <div class="pill" onclick="filterGenre('28', this)">Action</div>
     <div class="pill" onclick="filterGenre('16', this)">Anime</div>
+    <div class="pill" onclick="filterGenre('28', this)">Action</div>
     <div class="pill" onclick="filterGenre('27', this)">Horror</div>
     <div class="pill" onclick="filterGenre('878', this)">Sci-Fi</div>
 </div>
@@ -123,19 +119,24 @@
 </div>
 
 <div id="dashboard" class="page">
-    <h2 style="margin-top:0">Continue Watching</h2>
+    <h2>Continue Watching</h2>
     <div id="continueGrid" class="card-grid"></div>
 </div>
 
 <div id="playerPage" class="page">
-    <div class="player-container">
-        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
+    <div class="player-box">
+        <iframe id="mainFrame" src="" allowfullscreen></iframe>
     </div>
     
-    <div style="margin-top: 25px;">
-        <h2 id="playerMeta" style="margin:0; font-size: 24px; letter-spacing: -1px;">Loading...</h2>
+    <div style="margin-top: 20px;">
+        <h2 id="playerMeta" style="margin:0; font-size: 22px;">Loading...</h2>
+        <div style="margin-top: 10px; display:flex; gap: 10px;">
+            <button class="pill active" onclick="changeServer('vidsrc')">Server 1</button>
+            <button class="pill" onclick="changeServer('vidsrc.to')">Server 2</button>
+        </div>
+
         <div id="tvControls" style="display:none; margin-top: 25px;">
-            <select id="seasonSelect" style="width:100%; padding:12px; background:#181818; color:white; border:1px solid #333; border-radius:8px;" onchange="loadSeason()"></select>
+            <select id="seasonSelect" style="width:100%; padding:12px; background:#1a1a1a; color:white; border:1px solid #333; border-radius:8px;" onchange="loadSeason()"></select>
             <div class="ep-grid" id="epGrid"></div>
         </div>
     </div>
@@ -143,24 +144,36 @@
 
 <script>
     const TMDB_KEY = 'c030ba389534870868d461b8a5812f62';
-    const WATCHMODE_KEY = 'YOUR_WATCHMODE_API_KEY'; // denkwqdy0Sn2gej0iPM1jRkLcgyqNUEc78TENjuR
-    const DB_KEY = 'STREAMPRO_ELITE_FINAL';
+    const WATCHMODE_KEY = 'denkwqdy0Sn2gej0iPM1jRkLcgyqNUEc78TENjuR'; // Updated with your key
+    const DB_KEY = 'STREAMPRO_ELITE_DATA';
     
-    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', srv: 'vidsrc' };
 
     window.onload = () => { fetchTrending(); renderHistory(); };
 
-    // WatchMode URL handler
-    function getPlayerURL() {
-        // Updated to official WatchMode embed format
-        const base = `https://watchmode.stream/embed/`;
-        return cur.type === 'tv' 
-            ? `${base}tv/${cur.id}/${cur.s}/${cur.e}` 
-            : `${base}movie/${cur.id}`;
+    // Multi-Server Logic to prevent "IP Not Found"
+    function updateVideo() {
+        const frame = document.getElementById('mainFrame');
+        let url = "";
+        
+        if (cur.srv === 'vidsrc') {
+            url = `https://vidsrc.me/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}/${cur.e}` : ''}`;
+        } else {
+            url = `https://vidsrc.to/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}/${cur.e}` : ''}`;
+        }
+        
+        frame.src = url;
+        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type === 'tv' ? `(S${cur.s}:E${cur.e})` : ''}`;
+        saveProgress();
+    }
+
+    function changeServer(s) {
+        cur.srv = s;
+        updateVideo();
     }
 
     async function startApp(id, type, title, poster) {
-        cur = { id, type, title, poster, s: 1, e: 1 };
+        cur = { id, type, title, poster, s: 1, e: 1, srv: 'vidsrc' };
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; }
 
@@ -178,26 +191,30 @@
         }
     }
 
-    function updateVideo() {
-        document.getElementById('mainFrame').src = getPlayerURL();
-        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` - S${cur.s}:E${cur.e}` : '');
-        saveProgress();
-    }
-
     async function loadSeason(init = false) {
         cur.s = document.getElementById('seasonSelect').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${TMDB_KEY}`).then(res => res.json());
         const grid = document.getElementById('epGrid');
         grid.innerHTML = '';
-        r.episodes.forEach((ep, i) => {
+        r.episodes.forEach(ep => {
             const div = document.createElement('div');
             div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
-            div.style.animationDelay = `${i * 0.05}s`;
             div.innerText = ep.episode_number;
             div.onclick = () => { cur.e = ep.episode_number; updateVideo(); loadSeason(true); };
             grid.appendChild(div);
         });
         if(!init) { cur.e = 1; updateVideo(); }
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    function fetchTrending() {
+        fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`)
+            .then(r => r.json()).then(d => renderGrid(d.results, 'trendingGrid'));
     }
 
     function filterGenre(id, el) {
@@ -210,28 +227,16 @@
         showPage('home');
     }
 
-    function fetchTrending() {
-        fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`)
-            .then(r => r.json()).then(d => renderGrid(d.results, 'trendingGrid'));
-    }
-
     function renderGrid(data, target) {
         const g = document.getElementById(target); g.innerHTML = '';
-        data.forEach((m, i) => {
+        data.forEach(m => {
             if(!m.poster_path) return;
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.style.animationDelay = `${i * 0.05}s`;
             card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
             card.onclick = () => startApp(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
             g.appendChild(card);
         });
-    }
-
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id !== 'playerPage') document.getElementById('mainFrame').src = '';
     }
 
     function saveProgress() {
@@ -244,7 +249,7 @@
         const grid = document.getElementById('continueGrid');
         const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
-        grid.innerHTML = items.length ? '' : '<p style="opacity:0.5">No history found.</p>';
+        grid.innerHTML = items.length ? '' : '<p style="opacity:0.5">No history yet.</p>';
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
