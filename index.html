@@ -1,36 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>StreamPro Elite</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StreamPro Elite | Private Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="nav-brand">STREAMPRO</div>
-        <div class="nav-links">
-            <button onclick="showPage('home')">Home</button>
-            <button onclick="showPage('dashboard')">History</button>
-        </div>
-    </header>
 
-    <div id="playerPage" class="page">
-        <div id="playerContainer">
-            <iframe id="mainFrame" src="" allowfullscreen></iframe>
+<header>
+    <div class="header-container">
+        <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
+        <nav class="nav-links">
+            <span onclick="showPage('home')">Browse</span>
+            <span onclick="showPage('dashboard')">My History</span>
+        </nav>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search titles..." oninput="handleSearch(this.value)">
         </div>
+    </div>
+</header>
 
-        <div class="server-switcher">
-            <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">Server 1 (Vidking)</button>
-            <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">Server 2 (Vidsrc)</button>
+<main>
+    <div id="home" class="page active">
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1 id="heroTitle">Trending Now</h1>
+                <p>Continue your cinematic journey with high-definition servers.</p>
+            </div>
         </div>
-
-        <div class="save-panel">
-            <input type="text" id="timeInput" placeholder="Enter Timestamp...">
-            <button id="saveBtn" onclick="manualSave()">SAVE PROGRESS</button>
-        </div>
-        
-        <div id="tvControls"></div>
+        <div id="trendingGrid" class="card-grid"></div>
     </div>
 
-    <script src="logic.js"></script>
+    <div id="dashboard" class="page">
+        <h2 class="section-title">Continue Watching</h2>
+        <div id="continueGrid" class="card-grid"></div>
+    </div>
+
+    <div id="playerPage" class="page">
+        <div class="player-wrapper">
+            <div id="playerContainer">
+                <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+            </div>
+            
+            <div class="control-panel">
+                <div class="server-selector">
+                    <span>Switch Server:</span>
+                    <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">VIDKING (Primary)</button>
+                    <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">VIDSRC (Backup)</button>
+                </div>
+
+                <div class="meta-info">
+                    <h2 id="playerMeta">Title Loading...</h2>
+                    <div class="save-tool">
+                        <input type="text" id="timeInput" placeholder="Enter timestamp (e.g. 1:45:10)">
+                        <button id="saveBtn" onclick="manualSave()">SAVE PROGRESS</button>
+                    </div>
+                </div>
+
+                <div id="tvControls" class="tv-controls">
+                    <select id="seasonSelect" onchange="loadSeason()"></select>
+                    <div class="ep-grid" id="epGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Recommended For You</h2>
+        <div id="similarGrid" class="card-grid"></div>
+    </div>
+</main>
+
+<script src="logic.js"></script>
 </body>
 </html>
