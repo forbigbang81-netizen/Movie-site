@@ -28,8 +28,9 @@
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
 
-        .audio-toggle { display: flex; background: #1a1a1a; border-radius: 6px; margin: 15px 0; padding: 4px; border: 1px solid #333; }
-        .audio-btn { flex: 1; padding: 8px; border: none; background: none; color: #666; font-weight: bold; cursor: pointer; font-size: 11px; border-radius: 4px; }
+        /* Audio Toggle - Hidden by default */
+        .audio-toggle { display: none; background: #1a1a1a; border-radius: 6px; margin: 15px 0; padding: 4px; border: 1px solid #333; }
+        .audio-btn { flex: 1; padding: 10px; border: none; background: none; color: #666; font-weight: bold; cursor: pointer; font-size: 11px; border-radius: 4px; }
         .audio-btn.active { background: var(--accent); color: white; }
 
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
@@ -79,9 +80,9 @@
         </div>
     </div>
 
-    <div class="audio-toggle" id="audioToggle" style="display: none;">
-        <button id="btnSub" class="audio-btn active" onclick="setAudio('sub')">SUB (JPN)</button>
-        <button id="btnDub" class="audio-btn" onclick="setAudio('dub')">DUB (ENG)</button>
+    <div class="audio-toggle" id="audioToggle">
+        <button id="btnSub" class="audio-btn active" onclick="setAudio('sub')">JAPANESE (SUB)</button>
+        <button id="btnDub" class="audio-btn" onclick="setAudio('dub')">ENGLISH (DUB)</button>
     </div>
 
     <div id="tvControls" style="display:none;">
@@ -93,8 +94,8 @@
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAMPRO_PERM_V6';
-    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', audio: 'sub' };
+    const DB_KEY = 'STREAMPRO_PERM_V7';
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', audio: 'sub', isAnime: false };
 
     const FILLERS = { "Naruto": [26, 97, 101, 106], "One Piece": [54, 61] };
 
@@ -107,17 +108,27 @@
     }
 
     async function startApp(id, type, title, poster) {
-        cur = { id, type, title, poster, s: 1, e: 1, audio: 'sub' };
+        // Fetch full details to check language/genres
+        const detailRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}`);
+        const details = await detailRes.json();
+        
+        // Logic: Is it Japanese AND Animation?
+        const isJapanese = details.original_language === 'ja';
+        const isAnimation = details.genres.some(g => g.id === 16);
+        cur.isAnime = isJapanese && isAnimation;
+
+        cur.id = id; cur.type = type; cur.title = title; cur.poster = poster; cur.s = 1; cur.e = 1; cur.audio = 'sub';
+
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; cur.audio = hist[id].audio || 'sub'; }
 
-        const isTV = (type === 'tv' || id === 16);
-        document.getElementById('audioToggle').style.display = isTV ? 'flex' : 'none';
+        // Show/Hide switcher based on anime status
+        document.getElementById('audioToggle').style.display = cur.isAnime ? 'flex' : 'none';
+        setAudio(cur.audio);
 
-        if(isTV) {
+        if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
-            const r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`).then(res => res.json());
-            document.getElementById('seasonSelect').innerHTML = r.seasons.filter(s => s.season_number > 0)
+            document.getElementById('seasonSelect').innerHTML = details.seasons.filter(s => s.season_number > 0)
                 .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
             loadSeason(true);
         } else {
@@ -145,9 +156,9 @@
     }
 
     function updateFrame() {
-        const audio = cur.audio === 'dub' ? '&audio=dub' : '&audio=sub';
+        const audio = (cur.isAnime && cur.audio === 'dub') ? '&audio=dub' : '&audio=sub';
         document.getElementById('mainFrame').src = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}?${audio}`;
-        document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e} (${cur.audio.toUpperCase()})`;
+        document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e}`;
         
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         hist[cur.id] = { ...cur, stamp: Date.now() };
