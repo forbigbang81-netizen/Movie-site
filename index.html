@@ -3,120 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite</title>
+    <title>StreamPro Elite | Ultra</title>
     <style>
-        :root { --bg: #080808; --accent: #e50914; --text: #fff; --dim: #b3b3b3; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; overflow-x: hidden; }
+        :root {
+            --bg: #050505;
+            --surface: #121212;
+            --accent: #e50914;
+            --accent-glow: rgba(229, 9, 20, 0.5);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --glass: rgba(20, 20, 20, 0.8);
+        }
+
+        /* Smooth Scroll & Base */
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Advanced Glass Header */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 15px 5%;
+            position: fixed;
+            top: 0; width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+        }
+
+        header.scrolled { padding: 10px 5%; background: #000; }
+
+        .header-container { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
         
-        /* Header Fix */
-        header { background: #000; padding: 10px 4%; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #222; box-sizing: border-box; }
-        .header-container { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-        .nav-brand { color: var(--accent); font-weight: 900; font-size: 22px; cursor: pointer; flex-shrink: 0; }
-        .nav-links { display: flex; gap: 15px; flex-shrink: 0; }
-        .nav-links span { font-weight: 600; cursor: pointer; font-size: 13px; color: var(--dim); white-space: nowrap; }
-        .search-box { flex-grow: 1; max-width: 300px; }
-        .search-box input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 13px; outline: none; }
+        .nav-brand {
+            font-size: 24px; font-weight: 900; color: var(--accent);
+            text-transform: uppercase; letter-spacing: -1px; cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .nav-brand:hover { transform: scale(1.05); text-shadow: 0 0 15px var(--accent-glow); }
 
-        /* Layout */
-        .page { display: none; padding: 80px 5% 40px; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .search-box { flex-grow: 1; max-width: 400px; position: relative; }
+        .search-box input {
+            width: 100%; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); color: #fff;
+            padding: 10px 15px; border-radius: 8px; font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .search-box input:focus {
+            background: rgba(255,255,255,0.1); border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(229,9,20,0.2); outline: none;
+        }
 
-        /* Grid */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
-        .movie-card { background: #141414; border-radius: 4px; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; transition: transform 0.2s; position: relative; }
-        .movie-card:hover { transform: scale(1.05); }
-        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
-        .progress-tag { position: absolute; bottom: 0; width: 100%; background: rgba(229,9,20,0.9); font-size: 10px; padding: 5px 0; text-align: center; font-weight: bold; }
+        /* Page Layout & Animations */
+        .page { 
+            display: none; padding: 100px 5% 50px; 
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
 
-        /* Player */
-        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; }
-        .control-panel { margin-top: 20px; }
-        .srv-btn { background: #222; border: 1px solid #333; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px; }
-        .srv-btn.active { background: var(--accent); border-color: var(--accent); }
-        .save-tool { display: flex; gap: 10px; margin: 15px 0; }
-        .save-tool input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 4px; }
-        #saveBtn { background: var(--accent); border: none; color: #fff; padding: 0 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        /* Cinematic Movie Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px; margin-top: 30px;
+        }
 
-        /* TV Grid from your Screenshot */
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; margin-top: 15px; }
-        .ep-node { background: #1a1a1a; padding: 12px 0; text-align: center; border-radius: 4px; cursor: pointer; border: 1px solid #333; font-size: 13px; }
-        .ep-node.active { background: var(--accent); border-color: var(--accent); font-weight: bold; }
+        .movie-card {
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 2/3;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05) translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .movie-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+        .movie-card:hover img { transform: scale(1.1); }
+
+        .progress-tag {
+            position: absolute; bottom: 0; width: 100%;
+            background: linear-gradient(to top, var(--accent), transparent);
+            font-size: 11px; padding: 15px 0 8px; text-align: center;
+            font-weight: 800; text-transform: uppercase;
+        }
+
+        /* Enhanced Player UI */
+        .player-wrapper {
+            max-width: 1200px; margin: 0 auto;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .player-frame-container {
+            width: 100%; aspect-ratio: 16/9; background: #000;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .srv-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 10px 20px; border-radius: 30px;
+            cursor: pointer; font-size: 12px; font-weight: 700;
+            transition: all 0.3s ease; margin-right: 10px;
+        }
+        .srv-btn.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+        .srv-btn:hover:not(.active) { background: rgba(255,255,255,0.15); }
+
+        /* Episode Grid Redesign */
+        .ep-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px; margin-top: 20px;
+        }
+        .ep-node {
+            background: var(--surface); padding: 15px 0; border-radius: 10px;
+            text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease; font-weight: bold;
+        }
+        .ep-node:hover { background: #252525; border-color: var(--accent); transform: translateY(-3px); }
+        .ep-node.active { background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive Fixes */
+        @media (max-width: 600px) {
+            .card-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+            .nav-links { display: none; }
+        }
     </style>
 </head>
 <body>
 
-<header>
+<header id="mainHeader">
     <div class="header-container">
         <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
-        <nav class="nav-links">
-            <span onclick="showPage('home')">Browse</span>
-            <span onclick="showPage('dashboard')">History</span>
-        </nav>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search titles..." oninput="handleSearch(this.value)">
+            <input type="text" id="searchInput" placeholder="Search movies or shows..." oninput="handleSearch(this.value)">
         </div>
+        <nav class="nav-links">
+            <button class="srv-btn" onclick="showPage('dashboard')">History</button>
+        </nav>
     </div>
 </header>
 
 <div id="home" class="page active">
-    <h1 id="heroTitle">Trending Now</h1>
+    <h1 style="font-size: 32px; letter-spacing: -1px;">Trending Now</h1>
     <div id="trendingGrid" class="card-grid"></div>
 </div>
 
 <div id="dashboard" class="page">
-    <h2>Continue Watching</h2>
+    <h1>Continue Watching</h1>
     <div id="continueGrid" class="card-grid"></div>
 </div>
 
 <div id="playerPage" class="page">
-    <div class="player-container">
-        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
-    </div>
-    
-    <div class="control-panel">
-        <div class="server-selector">
-            <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">SERVER 1</button>
-            <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">SERVER 2</button>
+    <div class="player-wrapper">
+        <div class="player-frame-container">
+            <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
         </div>
-        <h2 id="playerMeta" style="margin: 15px 0 5px;">Loading...</h2>
-        <p id="saveStatus" style="color:#2ecc71; font-size:12px; margin: 0 0 10px; font-weight:bold;">✓ PROGRESS SAVED AUTOMATICALLY</p>
         
-        <div class="save-tool">
-            <input type="text" id="timeInput" placeholder="Enter timestamp (e.g. 1:20:05)">
-            <button id="saveBtn" onclick="manualSave()">SAVE</button>
-        </div>
+        <div style="margin-top: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 id="playerMeta" style="margin:0; font-size: 28px;">Loading...</h2>
+                    <p id="saveMsg" style="color: #2ecc71; font-size: 12px; font-weight: bold; opacity:0; transition:0.3s;">✓ AUTO-SAVED TO CLOUD</p>
+                </div>
+                <div class="server-selector">
+                    <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">SERVER 1</button>
+                    <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">SERVER 2</button>
+                </div>
+            </div>
 
-        <div id="tvControls" style="display:none;">
-            <select id="seasonSelect" style="width:100%; padding:10px; background:#1a1a1a; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
-            <div class="ep-grid" id="epGrid"></div>
+            <div id="tvControls" style="display:none; margin-top: 30px;">
+                <select id="seasonSelect" style="width:100%; padding:15px; background:var(--surface); color:white; border:1px solid #333; border-radius:10px; font-weight:bold;" onchange="loadSeason()"></select>
+                <div class="ep-grid" id="epGrid"></div>
+            </div>
         </div>
     </div>
-    <h3 style="margin-top:40px;">More Like This</h3>
+
+    <h2 style="margin-top: 50px; opacity:0.5;">Recommendations</h2>
     <div id="similarGrid" class="card-grid"></div>
 </div>
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAMPRO_ELITE_DATA';
-    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', time: '', server: 'vidking' };
+    const STORAGE_KEY = 'ELITE_STREAM_DATA';
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', server: 'vidking' };
 
-    window.onload = () => { fetchTrending(); renderDashboard(); };
+    // Scroll Effect
+    window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if(window.scrollY > 20) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+    });
+
+    window.onload = () => { fetchTrending(); renderHistory(); };
 
     function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'dashboard') renderDashboard();
+        const pages = document.querySelectorAll('.page');
+        pages.forEach(p => p.classList.remove('active'));
+        setTimeout(() => {
+            document.getElementById(id).classList.add('active');
+        }, 50);
+        if(id === 'dashboard') renderHistory();
         window.scrollTo(0,0);
     }
 
     async function startApp(id, type, title, poster) {
-        cur = { id, type, title, poster, s: 1, e: 1, time: '', server: 'vidking' };
-        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; cur.time = hist[id].time || ''; }
+        cur = { id, type, title, poster, s: 1, e: 1, server: 'vidking' };
         
-        document.getElementById('timeInput').value = cur.time;
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        if(history[id]) { cur.s = history[id].s; cur.e = history[id].e; }
+
         showPage('playerPage');
         updateVideo();
         
@@ -133,11 +248,16 @@
     }
 
     function updateVideo() {
-        const baseUrl = cur.server === 'vidking' ? 'https://vidking.bio/embed/' : 'https://vidsrc.xyz/embed/';
+        const base = cur.server === 'vidking' ? 'https://vidking.bio/embed/' : 'https://vidsrc.xyz/embed/';
         const path = cur.type === 'tv' ? `${cur.id}/${cur.s}${cur.server === 'vidking' ? '/' : '-'}${cur.e}` : cur.id;
-        document.getElementById('mainFrame').src = `${baseUrl}${cur.type}/${path}`;
-        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` - S${cur.s}:E${cur.e}` : '');
-        autoSave();
+        document.getElementById('mainFrame').src = `${base}${cur.type}/${path}`;
+        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` • S${cur.s} E${cur.e}` : '');
+        
+        // Auto-save feedback
+        const msg = document.getElementById('saveMsg');
+        msg.style.opacity = '1';
+        saveToStorage();
+        setTimeout(() => msg.style.opacity = '0', 2000);
     }
 
     function toggleServer(srv) {
@@ -162,18 +282,18 @@
         if(!init) { cur.e = 1; updateVideo(); }
     }
 
-    function autoSave() {
-        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        hist[cur.id] = { ...cur, stamp: Date.now() };
-        localStorage.setItem(DB_KEY, JSON.stringify(hist));
+    function saveToStorage() {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        data[cur.id] = { ...cur, stamp: Date.now() };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    function manualSave() {
-        cur.time = document.getElementById('timeInput').value;
-        autoSave();
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "✓";
-        setTimeout(() => btn.innerText = "SAVE", 2000);
+    function renderHistory() {
+        const grid = document.getElementById('continueGrid');
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
+        grid.innerHTML = items.length ? '' : '<p style="color:#666;">No history found.</p>';
+        items.forEach(m => grid.appendChild(createCard(m, true)));
     }
 
     function fetchTrending() {
@@ -185,7 +305,6 @@
         if(q.length < 2) return;
         const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`).then(r => r.json());
         renderGrid(res.results.filter(i => i.poster_path), 'trendingGrid');
-        document.getElementById('heroTitle').innerText = `Search: ${q}`;
     }
 
     async function fetchSimilar(id, type) {
@@ -193,30 +312,20 @@
         renderGrid(res.results.slice(0, 10), 'similarGrid');
     }
 
-    function renderGrid(data, gridId) {
-        const grid = document.getElementById(gridId);
-        grid.innerHTML = '';
-        data.forEach(m => {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
-            card.onclick = () => startApp(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
-            grid.appendChild(card);
-        });
+    function renderGrid(data, target) {
+        const g = document.getElementById(target); g.innerHTML = '';
+        data.forEach(m => g.appendChild(createCard(m)));
     }
 
-    function renderDashboard() {
-        const grid = document.getElementById('continueGrid');
-        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
-        grid.innerHTML = items.length ? '' : '<p style="color:#666;">No history yet.</p>';
-        items.forEach(m => {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}"><div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'MOVIE'} ${m.time}</div>`;
-            grid.appendChild(card);
-        });
+    function createCard(m, isHistory = false) {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        const type = m.media_type || m.type || (m.title ? 'movie' : 'tv');
+        const poster = m.poster_path || m.poster;
+        card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${poster}" loading="lazy">`;
+        if(isHistory) card.innerHTML += `<div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'Resume'}</div>`;
+        card.onclick = () => startApp(m.id, type, m.title || m.name, poster);
+        return card;
     }
 </script>
 </body>
