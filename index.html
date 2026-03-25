@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite Cloud</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
+    <title>StreamPro Elite</title>
     <style>
         :root { --bg: #000; --card: #1a1a1a; --accent: #e50914; --text: #fff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 50px; }
@@ -24,23 +21,23 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Player Layout from your Screenshot */
-        #playerContainer { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 15px; }
+        /* The Player Layout you liked */
+        #playerContainer { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 10px; }
         #mainFrame { width: 100%; height: 100%; border: none; }
 
         .details-area { padding: 0 5%; }
         #playerMeta { font-size: 22px; font-weight: bold; margin: 10px 0; }
         
-        /* Cloud Controls */
-        .cloud-box { background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .time-input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; }
+        /* Save Section */
+        .save-controls { background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .time-input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
         .btn-save { width: 100%; background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-save.success { background: #2ecc71; }
+        .btn-save:active { background: #b00710; }
 
-        /* Episode Grid from your Screenshot */
+        /* Episode Grid from Screenshot */
         .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 10px; margin: 20px 0; }
-        .ep-node { background: #262626; padding: 15px 0; text-align: center; border-radius: 4px; font-size: 14px; cursor: pointer; }
-        .ep-node.active { background: var(--accent); font-weight: bold; }
+        .ep-node { background: #262626; padding: 15px 0; text-align: center; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid #333; }
+        .ep-node.active { background: var(--accent); font-weight: bold; border-color: var(--accent); }
 
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 15px; margin-top: 15px; }
         .movie-card { background: var(--card); border-radius: 4px; position: relative; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; }
@@ -68,8 +65,9 @@
 </div>
 
 <div id="dashboard" class="page">
-    <h2>Cloud History</h2>
+    <h2>Continue Watching</h2>
     <div id="continueGrid" class="card-grid"></div>
+    <button onclick="exportHistory()" style="margin-top:20px; background:none; border:1px solid #444; color:#888; padding:10px; border-radius:5px; font-size:11px;">Backup History Data</button>
 </div>
 
 <div id="playerPage" class="page">
@@ -78,11 +76,11 @@
     </div>
 
     <div class="details-area">
-        <h3 id="playerMeta">Loading...</h3>
+        <h3 id="playerMeta">Title</h3>
         
-        <div class="cloud-box">
-            <input type="text" id="timeInput" class="time-input" placeholder="Enter Timestamp (e.g. 1:12:05)">
-            <button id="saveBtn" class="btn-save" onclick="saveToCloud()">SAVE PROGRESS TO SERVER</button>
+        <div class="save-controls">
+            <input type="text" id="timeInput" class="time-input" placeholder="Current Time (e.g. 1:15:00)">
+            <button id="saveBtn" class="btn-save" onclick="saveLocally()">SAVE PROGRESS</button>
         </div>
 
         <div id="tvControls" style="display:none;">
@@ -96,59 +94,54 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIGURATION ---
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
+    const DB_KEY = 'STREAMPRO_LOCAL_V1';
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', time: '' };
 
-    window.onload = () => { fetchTrending(); syncHistory(); };
+    window.onload = () => { fetchTrending(); renderDashboard(); };
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'dashboard') syncHistory();
+        if(id === 'dashboard') renderDashboard();
     }
 
-    function saveToCloud() {
-        const btn = document.getElementById('saveBtn');
+    // LOCAL SAVE LOGIC
+    function saveLocally() {
         cur.time = document.getElementById('timeInput').value;
         cur.stamp = Date.now();
 
-        db.ref('history/' + cur.id).set(cur).then(() => {
-            btn.innerText = "✓ SAVED TO CLOUD";
-            btn.classList.add('success');
-            setTimeout(() => {
-                btn.classList.remove('success');
-                btn.innerText = "SAVE PROGRESS TO SERVER";
-            }, 2000);
-        });
+        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        hist[cur.id] = {...cur};
+        localStorage.setItem(DB_KEY, JSON.stringify(hist));
+
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "✓ PROGRESS SAVED";
+        btn.style.backgroundColor = "#2ecc71";
+        setTimeout(() => {
+            btn.innerText = "SAVE PROGRESS";
+            btn.style.backgroundColor = "";
+        }, 2000);
     }
 
-    function syncHistory() {
-        db.ref('history').on('value', (snapshot) => {
-            const data = snapshot.val();
-            const grid = document.getElementById('continueGrid');
-            grid.innerHTML = '';
-            if(!data) return;
+    function renderDashboard() {
+        const grid = document.getElementById('continueGrid');
+        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        grid.innerHTML = '';
+        
+        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
+        if(items.length === 0) grid.innerHTML = '<p style="color:#666;">No watch history yet.</p>';
 
-            Object.values(data).sort((a,b) => b.stamp - a.stamp).forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
-                card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}"><div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'RESUME'}<br>${m.time||''}</div>`;
-                grid.appendChild(card);
-            });
+        items.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
+            card.innerHTML = `
+                <img src="https://image.tmdb.org/t/p/w342${m.poster}">
+                <div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'RESUME'}<br>${m.time||''}</div>
+            `;
+            grid.appendChild(card);
         });
     }
 
@@ -157,19 +150,20 @@
         window.scrollTo(0,0);
         cur = { id, type, title, poster, s: 1, e: 1, time: '' };
         
-        document.getElementById('playerMeta').innerText = title;
-        document.getElementById('timeInput').value = '';
+        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        if(hist[id]) {
+            cur.s = hist[id].s || 1;
+            cur.e = hist[id].e || 1;
+            cur.time = hist[id].time || '';
+        }
 
-        db.ref('history/' + id).once('value').then((snap) => {
-            const data = snap.val();
-            if(data) {
-                cur.s = data.s || 1;
-                cur.e = data.e || 1;
-                document.getElementById('timeInput').value = data.time || '';
-            }
-            updateVideo();
-            if(type === 'tv') loadTVMeta();
-        });
+        document.getElementById('playerMeta').innerText = title;
+        document.getElementById('timeInput').value = cur.time;
+        updateVideo();
+        
+        if(type === 'tv') loadTVMeta();
+        else document.getElementById('tvControls').style.display = 'none';
+        
         fetchSimilar(id, type);
     }
 
@@ -190,7 +184,12 @@
             const div = document.createElement('div');
             div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
             div.innerText = ep.episode_number;
-            div.onclick = () => { cur.e = ep.episode_number; updateVideo(); loadSeason(true); };
+            div.onclick = () => { 
+                cur.e = ep.episode_number; 
+                updateVideo(); 
+                document.querySelectorAll('.ep-node').forEach(n => n.classList.remove('active'));
+                div.classList.add('active');
+            };
             grid.appendChild(div);
         });
         if(!init) cur.e = 1;
@@ -198,27 +197,15 @@
     }
 
     function updateVideo() {
-        // Keeps the source you preferred
         document.getElementById('mainFrame').src = `https://vidsrc.xyz/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}-${cur.e}` : ''}`;
         if(cur.type === 'tv') document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e}`;
     }
 
-    async function fetchSimilar(id, type) {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/similar?api_key=${API_KEY}`).then(r => r.json());
-        const grid = document.getElementById('similarGrid');
-        grid.innerHTML = '';
-        res.results.slice(0, 8).forEach(m => {
-            const c = document.createElement('div');
-            c.className = 'movie-card';
-            c.onclick = () => startApp(m.id, type, m.title || m.name, m.poster_path);
-            c.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
-            grid.appendChild(c);
-        });
-    }
-
+    // Discovery & Trending
     function fetchTrending() { 
         fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r=>r.json()).then(d=>renderGrid(d.results)); 
     }
+    
     function renderGrid(res) {
         const g = document.getElementById('trendingGrid'); g.innerHTML = '';
         res.forEach(m => {
@@ -238,6 +225,18 @@
         document.getElementById('homeTitle').innerText = `Results for: ${q}`;
     }
 
+    async function fetchSimilar(id, type) {
+        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/similar?api_key=${API_KEY}`).then(r => r.json());
+        const grid = document.getElementById('similarGrid');
+        grid.innerHTML = '';
+        res.results.slice(0, 8).forEach(m => {
+            const c = document.createElement('div'); c.className = 'movie-card';
+            c.onclick = () => startApp(m.id, type, m.title || m.name, m.poster_path);
+            c.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
+            grid.appendChild(c);
+        });
+    }
+
     const GENRES = [{id: 16, name: "Anime"}, {id: 28, name: "Action"}, {id: 27, name: "Horror"}, {id: 878, name: "Sci-Fi"}];
     const genreBar = document.getElementById('genreBar');
     GENRES.forEach(g => {
@@ -252,6 +251,11 @@
         };
         genreBar.appendChild(span);
     });
+
+    function exportHistory() {
+        const data = localStorage.getItem(DB_KEY);
+        alert("Copy this code to backup your history: \n\n" + data);
+    }
 </script>
 </body>
 </html>
