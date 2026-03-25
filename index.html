@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite | Ultra</title>
+    <title>StreamPro Elite | Clean Stream</title>
     <style>
         :root {
             --bg: #050505;
@@ -22,7 +22,7 @@
             overflow-x: hidden;
         }
 
-        /* Fixed Header - No more overlapping */
+        /* Fixed Elite Header */
         header {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -32,86 +32,99 @@
             z-index: 1000;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .header-container { display: flex; align-items: center; justify-content: space-between; }
         .nav-brand { font-size: 22px; font-weight: 900; color: var(--accent); cursor: pointer; text-transform: uppercase; }
-        
-        .nav-right { display: flex; align-items: center; gap: 15px; }
-        .nav-link { font-size: 14px; font-weight: 600; cursor: pointer; opacity: 0.8; transition: 0.3s; }
-        .nav-link:hover { opacity: 1; color: var(--accent); }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-item { font-size: 14px; font-weight: 600; cursor: pointer; opacity: 0.7; transition: 0.3s; }
+        .nav-item:hover { opacity: 1; color: var(--accent); }
 
-        /* Search Bar Elite */
-        .search-area { padding: 80px 5% 10px; }
+        /* Search & Genre Section */
+        .top-controls { padding: 80px 5% 10px; }
         .search-input {
             width: 100%; background: #1a1a1a; border: 1px solid #333;
-            color: #fff; padding: 12px 15px; border-radius: 10px;
+            color: #fff; padding: 12px 15px; border-radius: 12px;
             font-size: 14px; outline: none; transition: 0.3s;
+            margin-bottom: 15px;
         }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-        /* Genre Bar */
-        .genre-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5%; scrollbar-width: none; }
+        .genre-bar { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
         .genre-bar::-webkit-scrollbar { display: none; }
         .pill {
-            background: #1a1a1a; border: 1px solid #333; padding: 8px 18px;
-            border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+            background: #1a1a1a; border: 1px solid #333; padding: 8px 20px;
+            border-radius: 25px; font-size: 13px; font-weight: 700; cursor: pointer;
             white-space: nowrap; transition: 0.3s;
         }
-        .pill.active { background: var(--accent); border-color: var(--accent); }
+        .pill.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 12px var(--accent-glow); }
 
         /* Content Pages */
-        .page { display: none; padding: 10px 5% 50px; opacity: 0; transform: translateY(10px); transition: 0.4s ease; }
-        .page.active { display: block; opacity: 1; transform: translateY(0); }
+        .page { display: none; padding: 10px 5% 50px; animation: fadeInUp 0.5s ease forwards; }
+        .page.active { display: block; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* Movie Cards */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
         .movie-card {
             background: var(--surface); border-radius: 12px; overflow: hidden;
-            aspect-ratio: 2/3; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            aspect-ratio: 2/3; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
-        .movie-card:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .movie-card:hover { transform: scale(1.05); z-index: 5; }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Advanced Player Container */
-        .player-box {
+        /* Advanced Player Area */
+        .player-wrapper {
             width: 100%; aspect-ratio: 16/9; background: #000;
-            border-radius: 15px; overflow: hidden; border: 1px solid #333;
+            border-radius: 16px; overflow: hidden; border: 1px solid #222;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Anime Episode Nodes */
+        .server-toggle { display: flex; gap: 10px; margin: 20px 0; }
+        .srv-btn {
+            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #333;
+            background: #1a1a1a; color: #fff; font-weight: 800; cursor: pointer;
+            transition: 0.3s; font-size: 13px;
+        }
+        .srv-btn.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
+        /* Episode Grid */
         .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; margin-top: 20px; }
         .ep-node {
             background: #1a1a1a; padding: 12px 0; text-align: center;
             border-radius: 8px; cursor: pointer; border: 1px solid #333;
-            font-weight: 800; font-size: 13px; transition: 0.2s;
+            font-weight: 800; transition: 0.2s;
         }
-        .ep-node.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .ep-node.active { background: var(--accent); border-color: var(--accent); }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-container">
-        <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
-        <div class="nav-right">
-            <span class="nav-link" onclick="showPage('home')">Home</span>
-            <span class="nav-link" onclick="showPage('dashboard')">History</span>
-        </div>
+    <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
+    <div class="nav-links">
+        <div class="nav-item" onclick="showPage('home')">Browse</div>
+        <div class="nav-item" onclick="showPage('dashboard')">History</div>
     </div>
 </header>
 
-<div class="search-area">
-    <input type="text" class="search-input" placeholder="Search titles..." oninput="handleSearch(this.value)">
-</div>
-
-<div class="genre-bar">
-    <div class="pill active" onclick="filterGenre('all', this)">Trending</div>
-    <div class="pill" onclick="filterGenre('16', this)">Anime</div>
-    <div class="pill" onclick="filterGenre('28', this)">Action</div>
-    <div class="pill" onclick="filterGenre('27', this)">Horror</div>
-    <div class="pill" onclick="filterGenre('878', this)">Sci-Fi</div>
+<div class="top-controls">
+    <input type="text" class="search-input" placeholder="Search for movies or shows..." oninput="handleSearch(this.value)">
+    <div class="genre-bar">
+        <div class="pill active" onclick="filterGenre('all', this)">Trending</div>
+        <div class="pill" onclick="filterGenre('16', this)">Anime</div>
+        <div class="pill" onclick="filterGenre('28', this)">Action</div>
+        <div class="pill" onclick="filterGenre('27', this)">Horror</div>
+        <div class="pill" onclick="filterGenre('878', this)">Sci-Fi</div>
+    </div>
 </div>
 
 <div id="home" class="page active">
@@ -119,57 +132,58 @@
 </div>
 
 <div id="dashboard" class="page">
-    <h2>Continue Watching</h2>
+    <h2 style="margin-top:0">Jump Back In</h2>
     <div id="continueGrid" class="card-grid"></div>
 </div>
 
 <div id="playerPage" class="page">
-    <div class="player-box">
+    <div class="player-wrapper">
         <iframe id="mainFrame" src="" allowfullscreen></iframe>
     </div>
     
-    <div style="margin-top: 20px;">
-        <h2 id="playerMeta" style="margin:0; font-size: 22px;">Loading...</h2>
-        <div style="margin-top: 10px; display:flex; gap: 10px;">
-            <button class="pill active" onclick="changeServer('vidsrc')">Server 1</button>
-            <button class="pill" onclick="changeServer('vidsrc.to')">Server 2</button>
-        </div>
+    <div class="server-toggle">
+        <button id="srv1" class="srv-btn active" onclick="setServer('vidsrc')">SERVER 1 (High Quality)</button>
+        <button id="srv2" class="srv-btn" onclick="setServer('superembed')">SERVER 2 (Less Ads)</button>
+    </div>
 
-        <div id="tvControls" style="display:none; margin-top: 25px;">
-            <select id="seasonSelect" style="width:100%; padding:12px; background:#1a1a1a; color:white; border:1px solid #333; border-radius:8px;" onchange="loadSeason()"></select>
-            <div class="ep-grid" id="epGrid"></div>
-        </div>
+    <h2 id="playerMeta" style="margin:0; font-size: 22px;">Loading...</h2>
+
+    <div id="tvControls" style="display:none; margin-top: 25px;">
+        <select id="seasonSelect" style="width:100%; padding:14px; background:#1a1a1a; color:white; border:1px solid #333; border-radius:10px; font-weight:bold;" onchange="loadSeason()"></select>
+        <div class="ep-grid" id="epGrid"></div>
     </div>
 </div>
 
 <script>
     const TMDB_KEY = 'c030ba389534870868d461b8a5812f62';
-    const WATCHMODE_KEY = 'denkwqdy0Sn2gej0iPM1jRkLcgyqNUEc78TENjuR'; // Updated with your key
-    const DB_KEY = 'STREAMPRO_ELITE_DATA';
+    const DB_KEY = 'STREAMPRO_ELITE_PRO_V3';
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', srv: 'vidsrc' };
 
     window.onload = () => { fetchTrending(); renderHistory(); };
 
-    // Multi-Server Logic to prevent "IP Not Found"
+    function setServer(s) {
+        cur.srv = s;
+        document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(s === 'vidsrc' ? 'srv1' : 'srv2').classList.add('active');
+        updateVideo();
+    }
+
     function updateVideo() {
         const frame = document.getElementById('mainFrame');
         let url = "";
         
+        // Server 2 (SuperEmbed) is known for being faster with fewer popups
         if (cur.srv === 'vidsrc') {
             url = `https://vidsrc.me/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}/${cur.e}` : ''}`;
         } else {
-            url = `https://vidsrc.to/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}/${cur.e}` : ''}`;
+            // New "Less Ads" Server 2 Logic
+            url = `https://multiembed.mov/directstream.php?video_id=${cur.id}&tmdb=1${cur.type === 'tv' ? `&s=${cur.s}&e=${cur.e}` : ''}`;
         }
         
         frame.src = url;
-        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type === 'tv' ? `(S${cur.s}:E${cur.e})` : ''}`;
+        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type === 'tv' ? `• S${cur.s} E${cur.e}` : ''}`;
         saveProgress();
-    }
-
-    function changeServer(s) {
-        cur.srv = s;
-        updateVideo();
     }
 
     async function startApp(id, type, title, poster) {
@@ -233,7 +247,7 @@
             if(!m.poster_path) return;
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}" loading="lazy">`;
             card.onclick = () => startApp(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
             g.appendChild(card);
         });
@@ -249,7 +263,7 @@
         const grid = document.getElementById('continueGrid');
         const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
-        grid.innerHTML = items.length ? '' : '<p style="opacity:0.5">No history yet.</p>';
+        grid.innerHTML = items.length ? '' : '<p style="opacity:0.5">Start watching to see your history!</p>';
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
