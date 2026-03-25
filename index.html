@@ -3,234 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite</title>
+    <title>StreamPro Elite | WatchMode Premium</title>
     <style>
-        :root { --bg: #000000; --card: #141414; --accent: #e50914; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow-x: hidden; }
+        :root {
+            --bg: #050505;
+            --surface: #121212;
+            --accent: #e50914;
+            --accent-glow: rgba(229, 9, 20, 0.4);
+            --text: #ffffff;
+            --glass: rgba(10, 10, 10, 0.8);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth Glass Header */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 12px 5%;
+            position: fixed;
+            top: 0; width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            box-sizing: border-box;
+        }
+
+        .header-container { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .nav-brand { font-size: 22px; font-weight: 900; color: var(--accent); cursor: pointer; letter-spacing: -1px; }
+
+        /* Genre Pill Navigation */
+        .genre-bar {
+            display: flex; gap: 10px; overflow-x: auto; padding: 15px 5% 5px;
+            margin-top: 70px; scrollbar-width: none;
+        }
+        .genre-bar::-webkit-scrollbar { display: none; }
+        .pill {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 13px;
+            font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.3s;
+        }
+        .pill.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 15px var(--accent-glow); }
+
+        /* Page Transitions */
+        .page { 
+            display: none; padding: 20px 5% 50px; 
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
+
+        /* Cinematic Staggered Grid */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
         
-        header { background: #000; padding: 10px 5%; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
-        .nav-top { display: flex; justify-content: space-between; align-items: center; }
-        .nav-brand { font-weight: 900; font-size: 24px; color: var(--accent); cursor: pointer; }
-        
-        .search-container { position: relative; width: 100%; }
-        #searchInput { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
-        #searchDropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid #333; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; border-radius: 0 0 6px 6px; }
+        .movie-card {
+            background: var(--surface); border-radius: 12px; overflow: hidden;
+            aspect-ratio: 2/3; cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: cardIn 0.6s ease backwards;
+        }
+        @keyframes cardIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        .genre-row { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
-        .genre-pill { white-space: nowrap; padding: 6px 14px; background: #222; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #333; }
-
-        .page { display: none; padding: 20px 5%; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; position: relative; border-bottom: 1px solid #222; }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
-        .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
-
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
-        .movie-card { background: var(--card); border-radius: 4px; position: relative; cursor: pointer; aspect-ratio: 2/3; overflow: hidden; }
+        .movie-card:hover { transform: scale(1.06); z-index: 10; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 10; font-weight: bold; }
-        .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 9px; padding: 3px; text-align: center; font-weight: bold; }
 
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 6px; margin: 15px 0; }
-        .ep-node { background: #222; padding: 10px 0; text-align: center; cursor: pointer; border-radius: 4px; font-size: 11px; }
-        .ep-node.active { background: var(--accent); font-weight: bold; }
+        /* Advanced Player */
+        .player-container {
+            width: 100%; aspect-ratio: 16/9; background: #000;
+            border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Anime Style Episode Grid */
+        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin-top: 20px; }
+        .ep-node {
+            background: #181818; padding: 12px 0; border-radius: 8px;
+            text-align: center; cursor: pointer; border: 1px solid #252525;
+            transition: 0.2s; font-weight: 800; font-size: 14px;
+        }
+        .ep-node.active { background: var(--accent); border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 15px var(--accent-glow); }
         
-        .section-title { font-size: 16px; margin: 20px 0 10px; color: #fff; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .search-box input {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 10px 15px; border-radius: 8px; width: 150px; transition: 0.3s;
+        }
+        .search-box input:focus { width: 220px; border-color: var(--accent); outline: none; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="nav-top">
+    <div class="header-container">
         <div class="nav-brand" onclick="location.reload()">STREAMPRO</div>
-        <div style="display:flex; gap:15px; font-size: 14px;">
-            <span onclick="showPage('home')" style="cursor:pointer;">Home</span>
-            <span onclick="showPage('dashboard')" style="cursor:pointer;">History</span>
+        <div class="search-box">
+            <input type="text" placeholder="Search..." oninput="handleSearch(this.value)">
         </div>
+        <button class="pill" style="padding: 6px 15px;" onclick="showPage('dashboard')">History</button>
     </div>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search movies or shows..." oninput="handleSearch(this.value)">
-        <div id="searchDropdown"></div>
-    </div>
-    <div class="genre-row" id="genreBar"></div>
 </header>
 
+<div class="genre-bar" id="genreBar">
+    <div class="pill active" onclick="filterGenre('all', this)">Trending</div>
+    <div class="pill" onclick="filterGenre('28', this)">Action</div>
+    <div class="pill" onclick="filterGenre('16', this)">Anime</div>
+    <div class="pill" onclick="filterGenre('27', this)">Horror</div>
+    <div class="pill" onclick="filterGenre('878', this)">Sci-Fi</div>
+</div>
+
 <div id="home" class="page active">
-    <h2 id="homeTitle">Trending Now</h2>
     <div id="trendingGrid" class="card-grid"></div>
 </div>
 
 <div id="dashboard" class="page">
-    <h2>Continue Watching</h2>
+    <h2 style="margin-top:0">Continue Watching</h2>
     <div id="continueGrid" class="card-grid"></div>
 </div>
 
 <div id="playerPage" class="page">
-    <div id="playerContainer">
-        <div class="video-wrapper">
-            <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
-        </div>
+    <div class="player-container">
+        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
     </div>
-
-    <div id="playerDetails">
-        <h3 id="playerMeta" style="margin:15px 0 5px; font-size:18px;"></h3>
-        <p id="saveStatus" style="font-size: 12px; color: #00ff00; margin-bottom: 15px;">✓ Progress Saved</p>
-        
-        <div id="tvControls" style="display:none;">
-            <select id="seasonSelect" style="width:100%; padding:10px; background:#111; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
-            <div id="epGrid" class="ep-grid"></div>
+    
+    <div style="margin-top: 25px;">
+        <h2 id="playerMeta" style="margin:0; font-size: 24px; letter-spacing: -1px;">Loading...</h2>
+        <div id="tvControls" style="display:none; margin-top: 25px;">
+            <select id="seasonSelect" style="width:100%; padding:12px; background:#181818; color:white; border:1px solid #333; border-radius:8px;" onchange="loadSeason()"></select>
+            <div class="ep-grid" id="epGrid"></div>
         </div>
-
-        <div class="section-title">More Like This</div>
-        <div id="similarGrid" class="card-grid"></div>
     </div>
 </div>
 
 <script>
-    const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAMPRO_V15_FINAL'; // New key to ensure fresh start
+    const TMDB_KEY = 'c030ba389534870868d461b8a5812f62';
+    const WATCHMODE_KEY = 'YOUR_WATCHMODE_API_KEY'; // denkwqdy0Sn2gej0iPM1jRkLcgyqNUEc78TENjuR
+    const DB_KEY = 'STREAMPRO_ELITE_FINAL';
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
-    window.onload = () => { renderDashboard(); fetchTrending(); };
+    window.onload = () => { fetchTrending(); renderHistory(); };
 
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'dashboard') renderDashboard();
+    // WatchMode URL handler
+    function getPlayerURL() {
+        // Updated to official WatchMode embed format
+        const base = `https://watchmode.stream/embed/`;
+        return cur.type === 'tv' 
+            ? `${base}tv/${cur.id}/${cur.s}/${cur.e}` 
+            : `${base}movie/${cur.id}`;
     }
 
     async function startApp(id, type, title, poster) {
         cur = { id, type, title, poster, s: 1, e: 1 };
-        
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; }
 
+        showPage('playerPage');
+        updateVideo();
+        
         if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
-            const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`).then(r => r.json());
+            const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_KEY}`).then(r => r.json());
             document.getElementById('seasonSelect').innerHTML = res.seasons.filter(s => s.season_number > 0)
                 .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
             loadSeason(true);
         } else {
             document.getElementById('tvControls').style.display = 'none';
-            saveAndRefresh();
         }
-        
-        fetchSimilar(id, type);
-        showPage('playerPage');
-        window.scrollTo(0,0);
+    }
+
+    function updateVideo() {
+        document.getElementById('mainFrame').src = getPlayerURL();
+        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` - S${cur.s}:E${cur.e}` : '');
+        saveProgress();
     }
 
     async function loadSeason(init = false) {
         cur.s = document.getElementById('seasonSelect').value;
-        const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
+        const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${TMDB_KEY}`).then(res => res.json());
         const grid = document.getElementById('epGrid');
         grid.innerHTML = '';
-        r.episodes.forEach(ep => {
+        r.episodes.forEach((ep, i) => {
             const div = document.createElement('div');
             div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
+            div.style.animationDelay = `${i * 0.05}s`;
             div.innerText = ep.episode_number;
-            div.onclick = () => { cur.e = ep.episode_number; saveAndRefresh(); loadSeason(true); };
+            div.onclick = () => { cur.e = ep.episode_number; updateVideo(); loadSeason(true); };
             grid.appendChild(div);
         });
-        if(!init) { cur.e = 1; saveAndRefresh(); }
-        else { saveAndRefresh(); }
+        if(!init) { cur.e = 1; updateVideo(); }
     }
 
-    function saveAndRefresh() {
-        const url = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
-        document.getElementById('mainFrame').src = url;
-        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` - S${cur.s} E${cur.e}` : '');
-        
-        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        hist[cur.id] = { ...cur, stamp: Date.now() };
-        localStorage.setItem(DB_KEY, JSON.stringify(hist));
-        
-        document.getElementById('saveStatus').style.opacity = "1";
-        setTimeout(() => { document.getElementById('saveStatus').style.opacity = "0.3"; }, 2000);
+    function filterGenre(id, el) {
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        const url = id === 'all' 
+            ? `https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`
+            : `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=${id}`;
+        fetch(url).then(r => r.json()).then(d => renderGrid(d.results, 'trendingGrid'));
+        showPage('home');
     }
 
-    async function fetchSimilar(id, type) {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/recommendations?api_key=${API_KEY}`).then(r => r.json());
-        const grid = document.getElementById('similarGrid');
-        grid.innerHTML = '';
-        res.results.slice(0, 8).forEach(m => {
-            const c = document.createElement('div');
-            c.className = 'movie-card';
-            c.onclick = () => startApp(m.id, type, m.title || m.name, m.poster_path);
-            c.innerHTML = `<img src="https://image.tmdb.org/t/p/w185${m.poster_path}">`;
-            grid.appendChild(c);
+    function fetchTrending() {
+        fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`)
+            .then(r => r.json()).then(d => renderGrid(d.results, 'trendingGrid'));
+    }
+
+    function renderGrid(data, target) {
+        const g = document.getElementById(target); g.innerHTML = '';
+        data.forEach((m, i) => {
+            if(!m.poster_path) return;
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.style.animationDelay = `${i * 0.05}s`;
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
+            card.onclick = () => startApp(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
+            g.appendChild(card);
         });
     }
 
-    function renderDashboard() {
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id !== 'playerPage') document.getElementById('mainFrame').src = '';
+    }
+
+    function saveProgress() {
+        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        data[cur.id] = { ...cur, stamp: Date.now() };
+        localStorage.setItem(DB_KEY, JSON.stringify(data));
+    }
+
+    function renderHistory() {
         const grid = document.getElementById('continueGrid');
         const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
-        grid.innerHTML = items.length ? '' : '<p style="color:#666;">No history.</p>';
+        grid.innerHTML = items.length ? '' : '<p style="opacity:0.5">No history found.</p>';
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}">`;
             card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
-            card.innerHTML = `<button class="remove-btn" onclick="event.stopPropagation(); removeHistory('${m.id}')">×</button><img src="https://image.tmdb.org/t/p/w185${m.poster}"><div class="progress-tag">${m.type==='tv' ? `S${m.s}:E${m.e}` : 'WATCHED'}</div>`;
             grid.appendChild(card);
         });
     }
 
-    function removeHistory(id) {
-        const h = JSON.parse(localStorage.getItem(DB_KEY));
-        delete h[id];
-        localStorage.setItem(DB_KEY, JSON.stringify(h));
-        renderDashboard();
-    }
-
-    const GENRES = [{id: 16, name: "Anime"}, {id: 28, name: "Action"}, {id: 27, name: "Horror"}, {id: 878, name: "Sci-Fi"}];
-    const genreBar = document.getElementById('genreBar');
-    GENRES.forEach(g => {
-        const span = document.createElement('span');
-        span.className = 'genre-pill';
-        span.innerText = g.name;
-        span.onclick = () => loadGenre(g.id, g.name);
-        genreBar.appendChild(span);
-    });
-
-    async function loadGenre(id, name) {
-        document.getElementById('homeTitle').innerText = name;
-        const type = id == 16 ? 'tv' : 'movie';
-        const res = await fetch(`https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&with_genres=${id}`).then(r => r.json());
-        renderGrid(res.results, type);
-        showPage('home');
-    }
-
     async function handleSearch(q) {
-        if(q.length<2) { document.getElementById('searchDropdown').style.display='none'; return; }
-        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`).then(r => r.json());
-        const drop = document.getElementById('searchDropdown');
-        drop.innerHTML = ''; drop.style.display = 'block';
-        res.results.slice(0,5).forEach(i => {
-            if(!i.poster_path) return;
-            const d = document.createElement('div');
-            d.style.padding='10px'; d.style.display='flex'; d.style.gap='10px'; d.style.cursor='pointer';
-            d.onclick = () => { startApp(i.id, i.media_type||'movie', i.title||i.name, i.poster_path); drop.style.display='none'; };
-            d.innerHTML = `<img src="https://image.tmdb.org/t/p/w92${i.poster_path}" style="width:30px"><span>${i.title||i.name}</span>`;
-            drop.appendChild(d);
-        });
-    }
-
-    function fetchTrending() { fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r=>r.json()).then(d=>renderGrid(d.results)); }
-    function renderGrid(res, type=null) {
-        const g = document.getElementById('trendingGrid'); g.innerHTML = '';
-        res.forEach(m => {
-            if(!m.poster_path) return;
-            const c = document.createElement('div'); c.className = 'movie-card';
-            c.onclick = () => startApp(m.id, type||m.media_type||'movie', m.title||m.name, m.poster_path);
-            c.innerHTML = `<img src="https://image.tmdb.org/t/p/w185${m.poster_path}">`;
-            g.appendChild(c);
-        });
+        if(q.length < 2) return;
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${q}`).then(r => r.json());
+        renderGrid(res.results.filter(i => i.poster_path), 'trendingGrid');
     }
 </script>
 </body>
