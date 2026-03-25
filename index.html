@@ -3,8 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Elite | Private Edition</title>
-    <link rel="stylesheet" href="style.css">
+    <title>StreamPro Elite</title>
+    <style>
+        :root { --bg: #080808; --accent: #e50914; --text: #fff; --dim: #b3b3b3; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* Header Fix */
+        header { background: #000; padding: 10px 4%; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #222; box-sizing: border-box; }
+        .header-container { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .nav-brand { color: var(--accent); font-weight: 900; font-size: 22px; cursor: pointer; flex-shrink: 0; }
+        .nav-links { display: flex; gap: 15px; flex-shrink: 0; }
+        .nav-links span { font-weight: 600; cursor: pointer; font-size: 13px; color: var(--dim); white-space: nowrap; }
+        .search-box { flex-grow: 1; max-width: 300px; }
+        .search-box input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 13px; outline: none; }
+
+        /* Layout */
+        .page { display: none; padding: 80px 5% 40px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Grid */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .movie-card { background: #141414; border-radius: 4px; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; transition: transform 0.2s; position: relative; }
+        .movie-card:hover { transform: scale(1.05); }
+        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
+        .progress-tag { position: absolute; bottom: 0; width: 100%; background: rgba(229,9,20,0.9); font-size: 10px; padding: 5px 0; text-align: center; font-weight: bold; }
+
+        /* Player */
+        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .control-panel { margin-top: 20px; }
+        .srv-btn { background: #222; border: 1px solid #333; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .srv-btn.active { background: var(--accent); border-color: var(--accent); }
+        .save-tool { display: flex; gap: 10px; margin: 15px 0; }
+        .save-tool input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 4px; }
+        #saveBtn { background: var(--accent); border: none; color: #fff; padding: 0 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        /* TV Grid from your Screenshot */
+        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; margin-top: 15px; }
+        .ep-node { background: #1a1a1a; padding: 12px 0; text-align: center; border-radius: 4px; cursor: pointer; border: 1px solid #333; font-size: 13px; }
+        .ep-node.active { background: var(--accent); border-color: var(--accent); font-weight: bold; }
+    </style>
 </head>
 <body>
 
@@ -13,7 +52,7 @@
         <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
         <nav class="nav-links">
             <span onclick="showPage('home')">Browse</span>
-            <span onclick="showPage('dashboard')">My History</span>
+            <span onclick="showPage('dashboard')">History</span>
         </nav>
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Search titles..." oninput="handleSearch(this.value)">
@@ -21,55 +60,164 @@
     </div>
 </header>
 
-<main>
-    <div id="home" class="page active">
-        <div class="hero-banner">
-            <div class="hero-content">
-                <h1 id="heroTitle">Trending Now</h1>
-                <p>Continue your cinematic journey with high-definition servers.</p>
-            </div>
+<div id="home" class="page active">
+    <h1 id="heroTitle">Trending Now</h1>
+    <div id="trendingGrid" class="card-grid"></div>
+</div>
+
+<div id="dashboard" class="page">
+    <h2>Continue Watching</h2>
+    <div id="continueGrid" class="card-grid"></div>
+</div>
+
+<div id="playerPage" class="page">
+    <div class="player-container">
+        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
+    </div>
+    
+    <div class="control-panel">
+        <div class="server-selector">
+            <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">SERVER 1</button>
+            <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">SERVER 2</button>
         </div>
-        <div id="trendingGrid" class="card-grid"></div>
-    </div>
-
-    <div id="dashboard" class="page">
-        <h2 class="section-title">Continue Watching</h2>
-        <div id="continueGrid" class="card-grid"></div>
-    </div>
-
-    <div id="playerPage" class="page">
-        <div class="player-wrapper">
-            <div id="playerContainer">
-                <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-            </div>
-            
-            <div class="control-panel">
-                <div class="server-selector">
-                    <span>Switch Server:</span>
-                    <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">VIDKING (Primary)</button>
-                    <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">VIDSRC (Backup)</button>
-                </div>
-
-                <div class="meta-info">
-                    <h2 id="playerMeta">Title Loading...</h2>
-                    <div class="save-tool">
-                        <input type="text" id="timeInput" placeholder="Enter timestamp (e.g. 1:45:10)">
-                        <button id="saveBtn" onclick="manualSave()">SAVE PROGRESS</button>
-                    </div>
-                </div>
-
-                <div id="tvControls" class="tv-controls">
-                    <select id="seasonSelect" onchange="loadSeason()"></select>
-                    <div class="ep-grid" id="epGrid"></div>
-                </div>
-            </div>
+        <h2 id="playerMeta" style="margin: 15px 0 5px;">Loading...</h2>
+        <p id="saveStatus" style="color:#2ecc71; font-size:12px; margin: 0 0 10px; font-weight:bold;">✓ PROGRESS SAVED AUTOMATICALLY</p>
+        
+        <div class="save-tool">
+            <input type="text" id="timeInput" placeholder="Enter timestamp (e.g. 1:20:05)">
+            <button id="saveBtn" onclick="manualSave()">SAVE</button>
         </div>
 
-        <h2 class="section-title">Recommended For You</h2>
-        <div id="similarGrid" class="card-grid"></div>
+        <div id="tvControls" style="display:none;">
+            <select id="seasonSelect" style="width:100%; padding:10px; background:#1a1a1a; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
+            <div class="ep-grid" id="epGrid"></div>
+        </div>
     </div>
-</main>
+    <h3 style="margin-top:40px;">More Like This</h3>
+    <div id="similarGrid" class="card-grid"></div>
+</div>
 
-<script src="logic.js"></script>
+<script>
+    const API_KEY = 'c030ba389534870868d461b8a5812f62';
+    const DB_KEY = 'STREAMPRO_ELITE_DATA';
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', time: '', server: 'vidking' };
+
+    window.onload = () => { fetchTrending(); renderDashboard(); };
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'dashboard') renderDashboard();
+        window.scrollTo(0,0);
+    }
+
+    async function startApp(id, type, title, poster) {
+        cur = { id, type, title, poster, s: 1, e: 1, time: '', server: 'vidking' };
+        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; cur.time = hist[id].time || ''; }
+        
+        document.getElementById('timeInput').value = cur.time;
+        showPage('playerPage');
+        updateVideo();
+        
+        if(type === 'tv') {
+            document.getElementById('tvControls').style.display = 'block';
+            const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`).then(r => r.json());
+            document.getElementById('seasonSelect').innerHTML = res.seasons.filter(s => s.season_number > 0)
+                .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
+            loadSeason(true);
+        } else {
+            document.getElementById('tvControls').style.display = 'none';
+        }
+        fetchSimilar(id, type);
+    }
+
+    function updateVideo() {
+        const baseUrl = cur.server === 'vidking' ? 'https://vidking.bio/embed/' : 'https://vidsrc.xyz/embed/';
+        const path = cur.type === 'tv' ? `${cur.id}/${cur.s}${cur.server === 'vidking' ? '/' : '-'}${cur.e}` : cur.id;
+        document.getElementById('mainFrame').src = `${baseUrl}${cur.type}/${path}`;
+        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` - S${cur.s}:E${cur.e}` : '');
+        autoSave();
+    }
+
+    function toggleServer(srv) {
+        cur.server = srv;
+        document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${srv}`).classList.add('active');
+        updateVideo();
+    }
+
+    async function loadSeason(init = false) {
+        cur.s = document.getElementById('seasonSelect').value;
+        const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
+        const grid = document.getElementById('epGrid');
+        grid.innerHTML = '';
+        r.episodes.forEach(ep => {
+            const div = document.createElement('div');
+            div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
+            div.innerText = ep.episode_number;
+            div.onclick = () => { cur.e = ep.episode_number; updateVideo(); loadSeason(true); };
+            grid.appendChild(div);
+        });
+        if(!init) { cur.e = 1; updateVideo(); }
+    }
+
+    function autoSave() {
+        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        hist[cur.id] = { ...cur, stamp: Date.now() };
+        localStorage.setItem(DB_KEY, JSON.stringify(hist));
+    }
+
+    function manualSave() {
+        cur.time = document.getElementById('timeInput').value;
+        autoSave();
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "✓";
+        setTimeout(() => btn.innerText = "SAVE", 2000);
+    }
+
+    function fetchTrending() {
+        fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`)
+            .then(r => r.json()).then(d => renderGrid(d.results, 'trendingGrid'));
+    }
+
+    async function handleSearch(q) {
+        if(q.length < 2) return;
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`).then(r => r.json());
+        renderGrid(res.results.filter(i => i.poster_path), 'trendingGrid');
+        document.getElementById('heroTitle').innerText = `Search: ${q}`;
+    }
+
+    async function fetchSimilar(id, type) {
+        const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/similar?api_key=${API_KEY}`).then(r => r.json());
+        renderGrid(res.results.slice(0, 10), 'similarGrid');
+    }
+
+    function renderGrid(data, gridId) {
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = '';
+        data.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
+            card.onclick = () => startApp(m.id, m.media_type || (m.title ? 'movie' : 'tv'), m.title || m.name, m.poster_path);
+            grid.appendChild(card);
+        });
+    }
+
+    function renderDashboard() {
+        const grid = document.getElementById('continueGrid');
+        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
+        grid.innerHTML = items.length ? '' : '<p style="color:#666;">No history yet.</p>';
+        items.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster}"><div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'MOVIE'} ${m.time}</div>`;
+            grid.appendChild(card);
+        });
+    }
+</script>
 </body>
 </html>
