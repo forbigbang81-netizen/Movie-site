@@ -1,69 +1,73 @@
-/* FIXED PROFESSIONAL HEADER */
-header {
-    background: #000;
-    padding: 10px 4%;
-    position: fixed;
-    top: 0; 
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    border-bottom: 1px solid #222;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StreamPro Elite</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
 
-.header-container { 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    gap: 15px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+<header>
+    <div class="header-container">
+        <div class="nav-brand" onclick="showPage('home')">STREAMPRO</div>
+        <nav class="nav-links">
+            <span onclick="showPage('home')">Browse</span>
+            <span onclick="showPage('dashboard')">History</span>
+        </nav>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search titles..." oninput="handleSearch(this.value)">
+        </div>
+    </div>
+</header>
 
-.nav-brand { 
-    color: var(--accent); 
-    font-weight: 900; 
-    font-size: 22px; 
-    cursor: pointer; 
-    letter-spacing: -1px;
-    flex-shrink: 0; /* Prevents logo from squishing */
-}
+<main>
+    <div id="home" class="page active">
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1 id="heroTitle">Trending Now</h1>
+            </div>
+        </div>
+        <div id="trendingGrid" class="card-grid"></div>
+    </div>
 
-.nav-links { 
-    display: flex; 
-    align-items: center;
-    gap: 15px;
-    flex-shrink: 0;
-}
+    <div id="dashboard" class="page">
+        <h2 class="section-title">Continue Watching</h2>
+        <div id="continueGrid" class="card-grid"></div>
+    </div>
 
-.nav-links span { 
-    font-weight: 600; 
-    cursor: pointer; 
-    font-size: 13px; 
-    color: var(--text-dim);
-    white-space: nowrap; /* Forces links to stay on one line */
-}
+    <div id="playerPage" class="page">
+        <div class="player-wrapper">
+            <div id="playerContainer">
+                <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
+            </div>
+            
+            <div class="control-panel">
+                <div class="server-selector">
+                    <button id="btn-vidking" class="srv-btn active" onclick="toggleServer('vidking')">SERVER 1</button>
+                    <button id="btn-vidsrc" class="srv-btn" onclick="toggleServer('vidsrc')">SERVER 2</button>
+                </div>
 
-.nav-links span:hover { color: #fff; }
+                <div class="meta-info">
+                    <h2 id="playerMeta">Loading...</h2>
+                    <div class="save-tool">
+                        <input type="text" id="timeInput" placeholder="0:00:00">
+                        <button id="saveBtn" onclick="manualSave()">SAVE PROGRESS</button>
+                    </div>
+                </div>
 
-.search-box { 
-    flex-grow: 1; 
-    max-width: 300px; /* Limits search bar width */
-}
+                <div id="tvControls" class="tv-controls" style="display:none;">
+                    <select id="seasonSelect" onchange="loadSeason()"></select>
+                    <div class="ep-grid" id="epGrid"></div>
+                </div>
+            </div>
+        </div>
 
-.search-box input {
-    width: 100%;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
-}
+        <h2 class="section-title">More Like This</h2>
+        <div id="similarGrid" class="card-grid"></div>
+    </div>
+</main>
 
-/* Adjust page padding so content isn't hidden under the fixed header */
-.page { 
-    display: none; 
-    padding-top: 100px; 
-    animation: fadeIn 0.4s ease; 
-}
+<script src="./logic.js"></script>
+</body>
+</html>
