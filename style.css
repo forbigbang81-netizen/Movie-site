@@ -1,79 +1,69 @@
-:root {
-    --bg: #080808;
-    --card-bg: #141414;
-    --accent: #e50914;
-    --text-main: #ffffff;
-    --text-dim: #b3b3b3;
-}
-
-body {
-    background: var(--bg);
-    color: var(--text-main);
-    font-family: 'Inter', -apple-system, sans-serif;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
-}
-
+/* FIXED PROFESSIONAL HEADER */
 header {
-    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-    padding: 20px 5%;
+    background: #000;
+    padding: 10px 4%;
     position: fixed;
-    top: 0; width: 90%;
+    top: 0; 
+    left: 0;
+    right: 0;
     z-index: 1000;
-    transition: background 0.3s;
+    border-bottom: 1px solid #222;
 }
 
-.header-container { display: flex; align-items: center; justify-content: space-between; }
-.nav-brand { color: var(--accent); font-weight: 900; font-size: 26px; cursor: pointer; letter-spacing: -1px; }
-.nav-links span { margin-left: 25px; font-weight: 600; cursor: pointer; font-size: 14px; color: var(--text-dim); }
+.header-container { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    gap: 15px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.nav-brand { 
+    color: var(--accent); 
+    font-weight: 900; 
+    font-size: 22px; 
+    cursor: pointer; 
+    letter-spacing: -1px;
+    flex-shrink: 0; /* Prevents logo from squishing */
+}
+
+.nav-links { 
+    display: flex; 
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.nav-links span { 
+    font-weight: 600; 
+    cursor: pointer; 
+    font-size: 13px; 
+    color: var(--text-dim);
+    white-space: nowrap; /* Forces links to stay on one line */
+}
+
 .nav-links span:hover { color: #fff; }
 
-.page { display: none; padding-top: 80px; animation: fadeIn 0.4s ease; }
-.active { display: block; }
-
-.hero-banner { height: 30vh; display: flex; align-items: flex-end; padding-bottom: 20px; }
-.hero-title { font-size: 40px; margin: 0; }
-
-/* Grid System */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 15px;
-    padding: 20px 0;
+.search-box { 
+    flex-grow: 1; 
+    max-width: 300px; /* Limits search bar width */
 }
 
-.movie-card {
-    background: var(--card-bg);
+.search-box input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 8px 12px;
     border-radius: 4px;
-    overflow: hidden;
-    transition: transform 0.3s;
-    cursor: pointer;
-    position: relative;
-    aspect-ratio: 2/3;
+    font-size: 13px;
+    outline: none;
 }
 
-.movie-card:hover { transform: scale(1.05); z-index: 2; }
-.movie-card img { width: 100%; height: 100%; object-fit: cover; }
-
-/* Player UI */
-.player-wrapper { max-width: 1200px; margin: 0 auto; }
-#playerContainer { width: 100%; aspect-ratio: 16/9; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-iframe { width: 100%; height: 100%; border: none; }
-
-.control-panel { padding: 20px 0; }
-.server-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text-dim); font-size: 12px; }
-.srv-btn { 
-    background: #222; border: 1px solid #333; color: #fff; padding: 8px 15px; 
-    border-radius: 4px; cursor: pointer; font-size: 11px;
+/* Adjust page padding so content isn't hidden under the fixed header */
+.page { 
+    display: none; 
+    padding-top: 100px; 
+    animation: fadeIn 0.4s ease; 
 }
-.srv-btn.active { border-color: var(--accent); background: var(--accent); }
-
-.save-tool { display: flex; gap: 10px; margin-top: 15px; }
-.save-tool input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 4px; }
-#saveBtn { background: var(--accent); border: none; color: #fff; padding: 0 20px; border-radius: 4px; font-weight: bold; }
-
-.ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 20px; }
-.ep-node { background: #1a1a1a; padding: 15px 0; text-align: center; border-radius: 4px; cursor: pointer; border: 1px solid #333; }
-.ep-node.active { background: var(--accent); border-color: var(--accent); font-weight: bold; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
