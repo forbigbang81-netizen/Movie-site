@@ -3,104 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Vidking</title>
+    <title>StreamPro Elite</title>
     <style>
-        :root { --bg: #000; --card: #1a1a1a; --accent: #e50914; --text: #fff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 50px; overflow-x: hidden; }
+        :root { --bg: #000; --card: #121212; --accent: #e50914; --text: #fff; --success: #2ecc71; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 50px; }
         
-        header { background: #000; padding: 15px 5%; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
-        .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .nav-brand { font-weight: 900; font-size: 24px; color: var(--accent); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
-        .nav-links { display: flex; gap: 20px; font-size: 14px; font-weight: bold; cursor: pointer; }
-
-        #searchInput { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 6px; outline: none; margin-bottom: 10px; box-sizing: border-box; }
-        .genre-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
-        .genre-pill { white-space: nowrap; padding: 8px 18px; background: #222; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid #333; }
+        header { background: #000; padding: 15px 5%; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { font-weight: 900; font-size: 22px; color: var(--accent); text-decoration: none; }
+        .nav-links { display: flex; gap: 20px; font-size: 15px; font-weight: 600; }
 
         .page { display: none; padding: 0 5%; animation: fadeIn 0.2s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Player Layout from Screenshot */
-        #playerContainer { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 10px; position: relative; }
+        #playerContainer { width: 100%; background: #000; aspect-ratio: 16/9; position: relative; }
         #mainFrame { width: 100%; height: 100%; border: none; }
 
-        .details-area { padding: 0 5%; }
-        #playerMeta { font-size: 22px; font-weight: bold; margin: 10px 0; color: #fff; }
+        /* Save Panel */
+        .save-panel { background: #111; padding: 15px; border-radius: 8px; margin: 15px 5%; border: 1px solid #222; }
+        .timestamp-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .time-input { flex: 1; background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; }
         
-        /* Save Section */
-        .save-controls { background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .time-input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        .btn-save { width: 100%; background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        
-        /* Episode Grid - Large Nodes */
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 10px; margin: 20px 0; }
-        .ep-node { background: #262626; padding: 15px 0; text-align: center; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
-        .ep-node.active { background: var(--accent); font-weight: bold; border-color: var(--accent); }
+        .btn-save { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-save:active { transform: scale(0.98); background: #b00710; }
+        .btn-save.saved { background: var(--success); }
 
-        /* Recommendation Grid */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 15px; }
-        .movie-card { background: var(--card); border-radius: 4px; position: relative; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 10px; }
+        .movie-card { background: var(--card); border-radius: 6px; position: relative; overflow: hidden; aspect-ratio: 2/3; cursor: pointer; }
         .movie-card img { width: 100%; height: 100%; object-fit: cover; }
-        .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px 0; text-align: center; font-weight: bold; }
         
-        .section-title { margin-top: 30px; border-left: 4px solid var(--accent); padding-left: 12px; font-size: 18px; font-weight: bold; }
+        .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px 0; text-align: center; font-weight: 800; }
+        .time-tag { background: rgba(0,0,0,0.8); color: #aaa; font-size: 9px; display: block; margin-top: 2px; }
+
+        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin: 15px 0; }
+        .ep-node { background: #222; padding: 12px 0; text-align: center; border-radius: 4px; font-size: 13px; cursor: pointer; }
+        .ep-node.active { background: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="nav-top">
-        <div class="nav-brand" onclick="location.reload()">STREAMPRO</div>
-        <div class="nav-links">
-            <span onclick="showPage('home')">Home</span>
-            <span onclick="showPage('dashboard')">History</span>
-        </div>
+    <a href="#" class="nav-brand" onclick="location.reload()">STREAMPRO</a>
+    <div class="nav-links">
+        <span onclick="showPage('home')">Home</span>
+        <span onclick="showPage('dashboard')">History</span>
     </div>
-    <input type="text" id="searchInput" placeholder="Search for movies or shows..." oninput="handleSearch(this.value)">
-    <div class="genre-row" id="genreBar"></div>
 </header>
 
 <div id="home" class="page active">
-    <h2 id="homeTitle">Trending Now</h2>
+    <h2 style="font-size: 20px;">Trending Now</h2>
     <div id="trendingGrid" class="card-grid"></div>
 </div>
 
 <div id="dashboard" class="page">
-    <h2>Continue Watching</h2>
+    <h2 style="font-size: 20px;">Continue Watching</h2>
     <div id="continueGrid" class="card-grid"></div>
 </div>
 
 <div id="playerPage" class="page">
     <div id="playerContainer">
-        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        <iframe id="mainFrame" src="" allowfullscreen allow="autoplay"></iframe>
     </div>
 
-    <div class="details-area">
-        <h3 id="playerMeta">Title</h3>
+    <div class="save-panel">
+        <h3 id="playerMeta" style="margin: 0 0 10px 0; font-size: 18px;"></h3>
         
-        <div class="save-controls">
-            <input type="text" id="timeInput" class="time-input" placeholder="Enter Timestamp (e.g. 1:12:05)">
-            <button id="saveBtn" class="btn-save" onclick="saveLocally()">SAVE PROGRESS</button>
+        <div class="timestamp-row">
+            <input type="text" id="timeInput" class="time-input" placeholder="Enter Timestamp (e.g. 1:20:05)">
         </div>
-
-        <div id="tvControls" style="display:none;">
-            <select id="seasonSelect" style="width:100%; padding:12px; background:#222; color:#fff; border:1px solid #444; border-radius: 5px;" onchange="loadSeason()"></select>
+        <button id="saveBtn" class="btn-save" onclick="manualSave()">SAVE PROGRESS</button>
+        
+        <div id="tvControls" style="display:none; margin-top: 15px;">
+            <select id="seasonSelect" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444;" onchange="loadSeason()"></select>
             <div class="ep-grid" id="epGrid"></div>
         </div>
+    </div>
 
-        <div class="section-title">More Like This</div>
+    <div style="padding: 0 5%;">
+        <h3 style="border-left: 4px solid var(--accent); padding-left: 10px;">More Like This</h3>
         <div id="similarGrid" class="card-grid"></div>
     </div>
 </div>
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    const DB_KEY = 'STREAMPRO_VIDKING_LOCAL';
+    const DB_KEY = 'STREAMPRO_V30_TIMESTAMP'; 
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', time: '' };
 
-    window.onload = () => { fetchTrending(); renderDashboard(); };
+    window.onload = () => { renderDashboard(); fetchTrending(); };
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -108,76 +99,36 @@
         if(id === 'dashboard') renderDashboard();
     }
 
-    // Save functionality
-    function saveLocally() {
-        cur.time = document.getElementById('timeInput').value;
-        cur.stamp = Date.now();
-
-        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        hist[cur.id] = {...cur};
-        localStorage.setItem(DB_KEY, JSON.stringify(hist));
-
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "✓ PROGRESS SAVED";
-        btn.style.backgroundColor = "#2ecc71";
-        setTimeout(() => {
-            btn.innerText = "SAVE PROGRESS";
-            btn.style.backgroundColor = "";
-        }, 2500);
-    }
-
-    function renderDashboard() {
-        const grid = document.getElementById('continueGrid');
-        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        grid.innerHTML = '';
-        
-        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
-        if(items.length === 0) grid.innerHTML = '<p style="color:#666; margin-top:20px;">Your history is empty.</p>';
-
-        items.forEach(m => {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
-            card.innerHTML = `
-                <img src="https://image.tmdb.org/t/p/w342${m.poster}">
-                <div class="progress-tag">${m.type==='tv'?'S'+m.s+':E'+m.e:'MOVIE'}<br>${m.time||''}</div>
-            `;
-            grid.appendChild(card);
-        });
-    }
-
     async function startApp(id, type, title, poster) {
         showPage('playerPage');
         window.scrollTo(0,0);
         
-        // Reset state
         cur = { id, type, title, poster, s: 1, e: 1, time: '' };
-        document.getElementById('mainFrame').src = '';
         
-        // Check local storage for progress
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        if(hist[id]) {
-            cur.s = hist[id].s || 1;
-            cur.e = hist[id].e || 1;
+        if(hist[id]) { 
+            cur.s = hist[id].s || 1; 
+            cur.e = hist[id].e || 1; 
             cur.time = hist[id].time || '';
         }
 
-        document.getElementById('playerMeta').innerText = title;
         document.getElementById('timeInput').value = cur.time;
-        updateVideo();
-        
-        if(type === 'tv') loadTVMeta();
-        else document.getElementById('tvControls').style.display = 'none';
+        document.getElementById('playerMeta').innerText = title;
+        document.getElementById('saveBtn').classList.remove('saved');
+        document.getElementById('saveBtn').innerText = "SAVE PROGRESS";
+
+        if(type === 'tv') {
+            document.getElementById('tvControls').style.display = 'block';
+            const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`).then(r => r.json());
+            document.getElementById('seasonSelect').innerHTML = res.seasons.filter(s => s.season_number > 0)
+                .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
+            loadSeason(true);
+        } else {
+            document.getElementById('tvControls').style.display = 'none';
+            updateVideo();
+        }
         
         fetchSimilar(id, type);
-    }
-
-    async function loadTVMeta() {
-        document.getElementById('tvControls').style.display = 'block';
-        const res = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}?api_key=${API_KEY}`).then(r => r.json());
-        document.getElementById('seasonSelect').innerHTML = res.seasons.filter(s => s.season_number > 0)
-            .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
-        loadSeason(true);
     }
 
     async function loadSeason(init = false) {
@@ -193,23 +144,36 @@
             div.onclick = () => { 
                 cur.e = ep.episode_number; 
                 updateVideo(); 
-                document.querySelectorAll('.ep-node').forEach(n => n.classList.remove('active'));
-                div.classList.add('active');
+                loadSeason(true);
             };
             grid.appendChild(div);
         });
+        
         if(!init) cur.e = 1;
         updateVideo();
     }
 
     function updateVideo() {
-        // Updated to use Vidking Engine
-        const vidkingUrl = `https://vidking.bio/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}/${cur.e}` : ''}`;
-        document.getElementById('mainFrame').src = vidkingUrl;
+        const url = `https://vidsrc.xyz/embed/${cur.type}/${cur.id}${cur.type === 'tv' ? `/${cur.s}-${cur.e}` : ''}`;
+        document.getElementById('mainFrame').src = url;
+        document.getElementById('playerMeta').innerText = cur.title + (cur.type === 'tv' ? ` (S${cur.s}:E${cur.e})` : '');
+    }
+
+    function manualSave() {
+        cur.time = document.getElementById('timeInput').value;
         
-        if(cur.type === 'tv') {
-            document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e}`;
-        }
+        const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        hist[cur.id] = { ...cur, stamp: Date.now() };
+        localStorage.setItem(DB_KEY, JSON.stringify(hist));
+
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "✓ SAVED TO STORAGE";
+        btn.classList.add('saved');
+        
+        setTimeout(() => {
+            btn.classList.remove('saved');
+            btn.innerText = "SAVE PROGRESS";
+        }, 3000);
     }
 
     async function fetchSimilar(id, type) {
@@ -225,6 +189,25 @@
         });
     }
 
+    function renderDashboard() {
+        const grid = document.getElementById('continueGrid');
+        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
+        grid.innerHTML = items.length ? '' : '<p style="color:#666;">No history.</p>';
+        items.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.onclick = () => startApp(m.id, m.type, m.title, m.poster);
+            card.innerHTML = `
+                <img src="https://image.tmdb.org/t/p/w342${m.poster}">
+                <div class="progress-tag">
+                    ${m.type==='tv' ? `S${m.s}:E${m.e}` : 'RESUME'}
+                    <span class="time-tag">${m.time ? '@ ' + m.time : ''}</span>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+
     function fetchTrending() { 
         fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r=>r.json()).then(d=>renderGrid(d.results)); 
     }
@@ -235,34 +218,11 @@
             if(!m.poster_path) return;
             const c = document.createElement('div');
             c.className = 'movie-card';
-            c.onclick = () => startApp(m.id, m.media_type||'movie', m.title||m.name, m.poster_path);
+            c.onclick = () => startApp(m.id, m.media_type || 'movie', m.title || m.name, m.poster_path);
             c.innerHTML = `<img src="https://image.tmdb.org/t/p/w342${m.poster_path}">`;
             g.appendChild(c);
         });
     }
-
-    async function handleSearch(q) {
-        if(q.length < 2) return;
-        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`).then(r => r.json());
-        renderGrid(res.results.filter(i => i.media_type !== 'person'));
-        showPage('home');
-        document.getElementById('homeTitle').innerText = `Results for: ${q}`;
-    }
-
-    const GENRES = [{id: 16, name: "Anime"}, {id: 28, name: "Action"}, {id: 27, name: "Horror"}, {id: 878, name: "Sci-Fi"}];
-    const genreBar = document.getElementById('genreBar');
-    GENRES.forEach(g => {
-        const span = document.createElement('span');
-        span.className = 'genre-pill';
-        span.innerText = g.name;
-        span.onclick = () => {
-            document.getElementById('homeTitle').innerText = g.name;
-            const type = g.id == 16 ? 'tv' : 'movie';
-            fetch(`https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&with_genres=${g.id}`).then(r => r.json()).then(d => renderGrid(d.results, type));
-            showPage('home');
-        };
-        genreBar.appendChild(span);
-    });
 </script>
 </body>
 </html>
