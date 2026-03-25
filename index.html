@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamPro Anime</title>
+    <title>StreamPro Cinema</title>
     <style>
         :root { --bg: #000000; --card: #141414; --accent: #e50914; --filler: #ff9800; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow-x: hidden; }
@@ -15,41 +15,31 @@
         .search-container { position: relative; width: 100%; }
         #searchInput { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
         
-        #searchDropdown { 
-            position: absolute; top: 100%; left: 0; width: 100%; 
-            background: #111; border: 1px solid #333; max-height: 400px; 
-            overflow-y: auto; display: none; z-index: 2000;
-        }
+        #searchDropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid #333; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; }
         .search-item { padding: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #1a1a1a; }
-        
+
         .page { display: none; padding: 20px 5%; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; }
-        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
-        .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px; text-align: center; font-weight: bold; }
-
-        #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; }
+        /* Player & Controls */
+        #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
 
-        /* Filler Tag Styling */
+        .skip-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .skip-btn { background: rgba(255,255,255,0.1); border: 1px solid #444; color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        .skip-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .movie-card { width: 140px; height: 210px; background: var(--card); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; }
+        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
+
         .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; margin-top: 15px; }
-        .ep-node { 
-            background: #222; padding: 12px 5px; text-align: center; 
-            cursor: pointer; border-radius: 4px; position: relative; font-size: 13px;
-        }
+        .ep-node { background: #222; padding: 12px 5px; text-align: center; cursor: pointer; border-radius: 4px; position: relative; font-size: 13px; }
         .ep-node.filler { border: 1px solid var(--filler); }
-        .ep-node.filler::after { 
-            content: 'FILLER'; position: absolute; top: -8px; left: 50%; 
-            transform: translateX(-50%); background: var(--filler); color: black; 
-            font-size: 7px; font-weight: bold; padding: 1px 4px; border-radius: 2px;
-        }
-        .ep-node.active { background: var(--accent); font-weight: bold; border: none; }
-        
-        .genre-pill { display: inline-block; padding: 6px 14px; background: #222; border-radius: 20px; font-size: 12px; margin: 5px; cursor: pointer; border: 1px solid #333; }
+        .ep-node.filler::after { content: 'FILLER'; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: var(--filler); color: black; font-size: 7px; font-weight: bold; padding: 1px 4px; border-radius: 2px; }
+        .ep-node.active { background: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -63,15 +53,12 @@
         </div>
     </div>
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search anime & verify fillers..." oninput="handleSearch(this.value)">
+        <input type="text" id="searchInput" placeholder="Search anime & skip intros..." oninput="handleSearch(this.value)">
         <div id="searchDropdown"></div>
     </div>
 </header>
 
 <div id="home" class="page active">
-    <div id="genreList">
-        <span class="genre-pill" onclick="loadGenre(16, 'Anime')">📺 Anime Only</span>
-    </div>
     <h2 id="homeTitle">Trending Now</h2>
     <div id="trendingGrid" class="card-grid"></div>
 </div>
@@ -87,11 +74,14 @@
             <iframe id="mainFrame" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
         </div>
     </div>
+
+    <div class="skip-controls">
+        <button class="skip-btn" onclick="skipTime(85)">⏭ SKIP INTRO (85s)</button>
+        <button class="skip-btn" onclick="skipTime(90)">⏭ SKIP OUTRO (90s)</button>
+    </div>
+
     <div id="tvControls" style="display:none; margin-top: 20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 id="playerMeta" style="margin:0; font-size:16px;"></h3>
-            <span style="color:var(--filler); font-size:11px; font-weight:bold;">● Filler Episodes Marked</span>
-        </div>
+        <h3 id="playerMeta" style="margin:0; font-size:16px;"></h3>
         <select id="seasonSelect" style="width:100%; padding:12px; background:#111; color:white; border:1px solid #333; margin-top:10px;" onchange="loadSeason()"></select>
         <div id="epGrid" class="ep-grid"></div>
     </div>
@@ -101,17 +91,21 @@
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
-    // Common Anime Filler Lists (S: Season, E: Episode Range)
-    const FILLER_DATA = {
-        "Naruto": { "S1": [26, 97, 101, 102, 103, 104, 105, 106] }, // Example logic
-        "One Piece": { "S1": [54, 55, 56, 57, 58, 59, 60] }
-    };
+    function skipTime(seconds) {
+        const frame = document.getElementById('mainFrame');
+        // Warning: This works by refreshing the source with a timestamp if the provider supports it.
+        // Most vidsrc links use standard parameters.
+        let currentSrc = frame.src;
+        if (currentSrc.includes('?')) {
+            frame.src = currentSrc + `&t=${seconds}s`;
+        } else {
+            frame.src = currentSrc + `?t=${seconds}s`;
+        }
+    }
 
     function isFiller(title, season, episode) {
-        if (title.includes("Naruto") && season == 1 && [26, 97, 101, 102, 103, 104, 105, 106].includes(episode)) return true;
-        if (title.includes("One Piece") && season == 1 && episode >= 54 && episode <= 60) return true;
-        // Generic filler logic for most long-running anime (simulated)
-        if (episode > 200 && episode % 5 === 0) return true; 
+        const fillers = { "Naruto": [26, 97, 101, 102, 103, 104, 105, 106] };
+        if (title.includes("Naruto") && season == 1 && fillers["Naruto"].includes(episode)) return true;
         return false;
     }
 
@@ -141,7 +135,7 @@
 
     async function startApp(id, type, title, poster) {
         cur = { id, type, title, poster, s: 1, e: 1 };
-        const hist = JSON.parse(localStorage.getItem('sp_filler_v1')) || {};
+        const hist = JSON.parse(localStorage.getItem('sp_final_v2')) || {};
         if(hist[id]) { cur.s = hist[id].s; cur.e = hist[id].e; }
 
         if(type === 'tv') {
@@ -162,7 +156,6 @@
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
         const grid = document.getElementById('epGrid');
         grid.innerHTML = '';
-        
         r.episodes.forEach(ep => {
             const isEpFiller = isFiller(cur.title, cur.s, ep.episode_number);
             const div = document.createElement('div');
@@ -178,15 +171,15 @@
     function updateFrame() {
         document.getElementById('mainFrame').src = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
         document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e}`;
-        const hist = JSON.parse(localStorage.getItem('sp_filler_v1')) || {};
+        const hist = JSON.parse(localStorage.getItem('sp_final_v2')) || {};
         hist[cur.id] = { ...cur, stamp: Date.now() };
-        localStorage.setItem('sp_filler_v1', JSON.stringify(hist));
+        localStorage.setItem('sp_final_v2', JSON.stringify(hist));
     }
 
     function renderDashboard() {
         const grid = document.getElementById('continueGrid');
         grid.innerHTML = '';
-        const items = Object.values(JSON.parse(localStorage.getItem('sp_filler_v1')) || {}).sort((a,b) => b.stamp - a.stamp);
+        const items = Object.values(JSON.parse(localStorage.getItem('sp_final_v2')) || {}).sort((a,b) => b.stamp - a.stamp);
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
@@ -196,7 +189,6 @@
         });
     }
 
-    // Load Trending
     fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`).then(r => r.json()).then(d => {
         d.results.forEach(m => {
             const card = document.createElement('div');
