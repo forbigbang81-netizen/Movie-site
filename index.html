@@ -15,6 +15,7 @@
         .search-container { position: relative; width: 100%; }
         #searchInput { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
         #searchDropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid #333; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; border-radius: 0 0 6px 6px; }
+        .search-item { padding: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #1a1a1a; }
 
         .genre-row { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
         .genre-pill { white-space: nowrap; padding: 6px 14px; background: #222; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #333; }
@@ -23,7 +24,7 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+        #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #222; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
 
@@ -35,8 +36,8 @@
         .progress-tag { position: absolute; bottom: 0; width: 100%; background: var(--accent); font-size: 10px; padding: 4px; text-align: center; font-weight: bold; }
 
         .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin-top: 15px; }
-        .ep-node { background: #222; padding: 12px 0; text-align: center; cursor: pointer; border-radius: 4px; font-size: 12px; }
-        .ep-node.active { background: var(--accent); font-weight: bold; }
+        .ep-node { background: #222; padding: 12px 0; text-align: center; cursor: pointer; border-radius: 4px; font-size: 12px; transition: 0.2s; }
+        .ep-node.active { background: var(--accent); font-weight: bold; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -73,7 +74,7 @@
         </div>
     </div>
     <div id="tvControls" style="display:none;">
-        <h3 id="playerMeta" style="margin:10px 0; font-size:15px;"></h3>
+        <h3 id="playerMeta" style="margin:15px 0; font-size:15px; color: #aaa;"></h3>
         <select id="seasonSelect" style="width:100%; padding:12px; background:#111; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
         <div id="epGrid" class="ep-grid"></div>
     </div>
@@ -81,12 +82,10 @@
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    // LOCK THIS KEY - DO NOT CHANGE IN FUTURE UPDATES
-    const DB_KEY = 'STREAMPRO_STABLE_v10'; 
+    const DB_KEY = 'STREAMPRO_V12_ULTRA'; // Incremented key for fresh start
     
     let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
-    // This runs immediately
     window.onload = () => { 
         renderDashboard(); 
         fetchTrending(); 
@@ -99,24 +98,28 @@
     }
 
     async function startApp(id, type, title, poster) {
-        cur.id = id; cur.type = type; cur.title = title; cur.poster = poster; cur.s = 1; cur.e = 1;
-
+        cur.id = id; cur.type = type; cur.title = title; cur.poster = poster;
+        
+        // Step 1: Check existing history immediately
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(hist[id]) { 
-            cur.s = hist[id].s; 
-            cur.e = hist[id].e; 
+            cur.s = hist[id].s || 1; 
+            cur.e = hist[id].e || 1; 
+        } else {
+            cur.s = 1; cur.e = 1;
         }
 
+        // Step 2: Handle TV vs Movie
         if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
             const detailRes = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`);
             const details = await detailRes.json();
             document.getElementById('seasonSelect').innerHTML = details.seasons.filter(s => s.season_number > 0)
                 .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
-            loadSeason(true);
+            await loadSeason(true); // Wait for season load
         } else {
             document.getElementById('tvControls').style.display = 'none';
-            updateFrame();
+            saveAndRefresh();
         }
         showPage('playerPage');
     }
@@ -124,29 +127,50 @@
     async function loadSeason(init = false) {
         cur.s = document.getElementById('seasonSelect').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${cur.id}/season/${cur.s}?api_key=${API_KEY}`).then(res => res.json());
+        
         const grid = document.getElementById('epGrid');
         grid.innerHTML = '';
         r.episodes.forEach(ep => {
             const div = document.createElement('div');
             div.className = `ep-node ${ep.episode_number == cur.e ? 'active' : ''}`;
             div.innerText = ep.episode_number;
-            div.onclick = () => { cur.e = ep.episode_number; updateFrame(); };
+            div.onclick = () => { 
+                cur.e = ep.episode_number; 
+                saveAndRefresh();
+                // Update UI active state manually
+                document.querySelectorAll('.ep-node').forEach(n => n.classList.remove('active'));
+                div.classList.add('active');
+            };
             grid.appendChild(div);
         });
-        if(!init) cur.e = 1;
-        updateFrame();
+
+        if(!init) {
+            cur.e = 1; // Reset to Ep 1 if user manually switches season
+            saveAndRefresh();
+        } else {
+            saveAndRefresh(); // Load the saved episode if it was an init load
+        }
     }
 
-    function updateFrame() {
-        // vidsrc typically handles sub/dub internally via their own player UI settings
+    function saveAndRefresh() {
+        // Build URL
         const url = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
         document.getElementById('mainFrame').src = url;
-        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type==='tv' ? `- S${cur.s} E${cur.e}` : ''}`;
+        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type==='tv' ? `(S${cur.s}:E${cur.e})` : ''}`;
         
-        // Save to browser storage
+        // FORCED SAVE TO LOCALSTORAGE
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        hist[cur.id] = { ...cur, stamp: Date.now() };
+        hist[cur.id] = { 
+            id: cur.id, 
+            type: cur.type, 
+            title: cur.title, 
+            poster: cur.poster, 
+            s: cur.s, 
+            e: cur.e, 
+            stamp: Date.now() 
+        };
         localStorage.setItem(DB_KEY, JSON.stringify(hist));
+        console.log("History Updated:", cur.title);
     }
 
     function removeHistory(id, e) { 
@@ -159,11 +183,12 @@
 
     function renderDashboard() {
         const grid = document.getElementById('continueGrid');
-        const rawData = localStorage.getItem(DB_KEY);
-        const data = rawData ? JSON.parse(rawData) : {};
+        const data = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        // Sort by most recent timestamp
         const items = Object.values(data).sort((a,b) => b.stamp - a.stamp);
         
-        grid.innerHTML = items.length ? '' : '<p style="color:#666; font-size:12px;">No history.</p>';
+        grid.innerHTML = items.length ? '' : '<p style="color:#666; font-size:14px; text-align:center; width:100%; margin-top:20px;">No history found.</p>';
+        
         items.forEach(m => {
             const card = document.createElement('div');
             card.className = 'movie-card';
@@ -177,6 +202,7 @@
         });
     }
 
+    // Genre/Discovery logic
     const GENRES = [{id: 16, name: "Anime"}, {id: 28, name: "Action"}, {id: 27, name: "Horror"}, {id: 878, name: "Sci-Fi"}];
     const genreBar = document.getElementById('genreBar');
     GENRES.forEach(g => {
@@ -205,7 +231,7 @@
             if(!i.poster_path) return;
             const d = document.createElement('div'); d.className='search-item';
             d.onclick = () => { startApp(i.id, i.media_type||'tv', i.title||i.name, i.poster_path); drop.style.display='none'; };
-            d.innerHTML = `<img src="https://image.tmdb.org/t/p/w92${i.poster_path}" style="width:30px"><span>${i.title||i.name}</span>`;
+            d.innerHTML = `<img src="https://image.tmdb.org/t/p/w92${i.poster_path}" style="width:30px; border-radius:3px;"><span>${i.title||i.name}</span>`;
             drop.appendChild(d);
         });
     }
