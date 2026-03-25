@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StreamPro Elite</title>
     <style>
-        :root { --bg: #000000; --card: #141414; --accent: #e50914; --filler: #ff9800; --text: #ffffff; }
+        :root { --bg: #000000; --card: #141414; --accent: #e50914; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow-x: hidden; }
         
         header { background: #000; padding: 10px 5%; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
@@ -28,10 +28,6 @@
         #playerContainer { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
-
-        .audio-toggle { display: none; background: #1a1a1a; border-radius: 6px; margin: 15px 0; padding: 4px; border: 1px solid #333; }
-        .audio-btn { flex: 1; padding: 10px; border: none; background: none; color: #666; font-weight: bold; cursor: pointer; font-size: 11px; border-radius: 4px; }
-        .audio-btn.active { background: var(--accent); color: white; }
 
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
         .movie-card { background: var(--card); border-radius: 4px; position: relative; cursor: pointer; aspect-ratio: 2/3; overflow: hidden; }
@@ -56,7 +52,7 @@
         </div>
     </div>
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search anime, movies..." oninput="handleSearch(this.value)">
+        <input type="text" id="searchInput" placeholder="Search movies or shows..." oninput="handleSearch(this.value)">
         <div id="searchDropdown"></div>
     </div>
     <div class="genre-row" id="genreBar"></div>
@@ -79,13 +75,8 @@
         </div>
     </div>
 
-    <div class="audio-toggle" id="audioToggle">
-        <button id="btnSub" class="audio-btn active" onclick="setAudio('sub')">JAPANESE (SUB)</button>
-        <button id="btnDub" class="audio-btn" onclick="setAudio('dub')">ENGLISH (DUB)</button>
-    </div>
-
     <div id="tvControls" style="display:none;">
-        <h3 id="playerMeta" style="margin:10px 0; font-size:15px;"></h3>
+        <h3 id="playerMeta" style="margin:15px 0; font-size:15px;"></h3>
         <select id="seasonSelect" style="width:100%; padding:12px; background:#111; color:white; border:1px solid #333;" onchange="loadSeason()"></select>
         <div id="epGrid" class="ep-grid"></div>
     </div>
@@ -93,12 +84,10 @@
 
 <script>
     const API_KEY = 'c030ba389534870868d461b8a5812f62';
-    // CRITICAL: NEVER CHANGE THIS KEY IN FUTURE UPDATES TO KEEP DATA
     const DB_KEY = 'STREAMPRO_V1_STABLE'; 
     
-    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '', audio: 'sub', isAnime: false };
+    let cur = { id: '', type: '', s: 1, e: 1, title: '', poster: '' };
 
-    // Initial Load
     window.onload = () => { 
         renderDashboard(); 
         fetchTrending(); 
@@ -111,29 +100,18 @@
     }
 
     async function startApp(id, type, title, poster) {
-        const detailRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}`);
-        const details = await detailRes.json();
-        
-        // Anime Check: Japanese language + Animation genre
-        const isJapanese = details.original_language === 'ja';
-        const isAnimation = details.genres.some(g => g.id === 16);
-        cur.isAnime = isJapanese && isAnimation;
+        cur.id = id; cur.type = type; cur.title = title; cur.poster = poster; cur.s = 1; cur.e = 1;
 
-        cur.id = id; cur.type = type; cur.title = title; cur.poster = poster; cur.s = 1; cur.e = 1; cur.audio = 'sub';
-
-        // Load existing history
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         if(hist[id]) { 
             cur.s = hist[id].s; 
             cur.e = hist[id].e; 
-            cur.audio = hist[id].audio || 'sub'; 
         }
-
-        document.getElementById('audioToggle').style.display = cur.isAnime ? 'flex' : 'none';
-        setAudio(cur.audio);
 
         if(type === 'tv') {
             document.getElementById('tvControls').style.display = 'block';
+            const detailRes = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`);
+            const details = await detailRes.json();
             document.getElementById('seasonSelect').innerHTML = details.seasons.filter(s => s.season_number > 0)
                 .map(s => `<option value="${s.season_number}" ${s.season_number == cur.s ? 'selected' : ''}>Season ${s.season_number}</option>`).join('');
             loadSeason(true);
@@ -161,21 +139,13 @@
     }
 
     function updateFrame() {
-        const audio = (cur.isAnime && cur.audio === 'dub') ? '&audio=dub' : '&audio=sub';
-        document.getElementById('mainFrame').src = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}?${audio}`;
-        document.getElementById('playerMeta').innerText = `${cur.title} - S${cur.s} E${cur.e}`;
+        const url = `https://vidsrc.cc/v2/embed/${cur.type}/${cur.id}${cur.type==='tv' ? `/${cur.s}/${cur.e}` : ''}`;
+        document.getElementById('mainFrame').src = url;
+        document.getElementById('playerMeta').innerText = `${cur.title} ${cur.type==='tv' ? `- S${cur.s} E${cur.e}` : ''}`;
         
-        // SAVE IMMEDIATELY
         const hist = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         hist[cur.id] = { ...cur, stamp: Date.now() };
         localStorage.setItem(DB_KEY, JSON.stringify(hist));
-    }
-
-    function setAudio(t) { 
-        cur.audio = t; 
-        updateFrame(); 
-        document.getElementById('btnSub').classList.toggle('active', t==='sub'); 
-        document.getElementById('btnDub').classList.toggle('active', t==='dub'); 
     }
 
     function removeHistory(id, e) { 
