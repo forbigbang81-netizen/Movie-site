@@ -42,9 +42,15 @@
                 <div id="pane-register" class="view-pane">
                     <div class="tagline">Get Started</div>
                     <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Create Account</h1>
-                    <form onsubmit="handleAuth(event, 'register')">
-                        <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" required placeholder="name@example.com"></div>
-                        <div class="form-group"><label>Password</label><input type="password" id="reg-pass" required placeholder="••••••••"></div>
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="reg-email" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="reg-pass" required placeholder="••••••••">
+                        </div>
                         <button type="submit" class="btn btn-submit">Register</button>
                     </form>
                     <div class="form-footer">Already have an account? <a href="#" onclick="window.switchPane('login')">Sign In</a></div>
@@ -53,9 +59,15 @@
                 <div id="pane-login" class="view-pane">
                     <div class="tagline">Welcome Back</div>
                     <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Sign In</h1>
-                    <form onsubmit="handleAuth(event, 'login')">
-                        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" required placeholder="name@example.com"></div>
-                        <div class="form-group"><label>Password</label><input type="password" id="login-pass" required placeholder="••••••••"></div>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="login-email" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="login-pass" required placeholder="••••••••">
+                        </div>
                         <button type="submit" class="btn btn-submit">Sign In</button>
                     </form>
                     <div class="form-footer">New to CineVerse? <a href="#" onclick="window.switchPane('register')">Create an account</a></div>
