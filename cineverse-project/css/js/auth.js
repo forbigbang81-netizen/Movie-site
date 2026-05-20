@@ -1,31 +1,23 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCDaf8skPHPqxvXUsDecwpP8cUMbAo2aZI",
-    authDomain: "movie-site-1db2e.firebaseapp.com",
-    projectId: "movie-site-1db2e",
-    storageBucket: "movie-site-1db2e.firebasestorage.app",
-    messagingSenderId: "741820670818",
-    appId: "1:741820670818:web:bf89e29e0146c9484b023b"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// ... (Keep your Firebase config and initialization code at the top exactly the same)
 
 // Active Verification Session Observer
 onAuthStateChanged(auth, (user) => {
     if (user && user.emailVerified) {
         // Active key token verified, skip login gates instantly
-        window.enterDashboard();
+        if (typeof window.enterDashboard === "function") {
+            window.enterDashboard();
+        }
     } else {
         // Clear workspace states and redirect to safe login lanes
-        document.getElementById('view-app-dashboard').classList.remove('active');
-        document.getElementById('view-app-landing').classList.add('active');
+        const dash = document.getElementById('view-app-dashboard');
+        const land = document.getElementById('view-app-landing');
+        if (dash) dash.classList.remove('active');
+        if (land) land.classList.add('active');
         document.body.classList.add('lock-scroll');
     }
 });
 
+// FIX: Explicitly binding handleAuth to the global window space
 window.handleAuth = async function(event, type) {
     event.preventDefault();
     if (type === 'register') {
