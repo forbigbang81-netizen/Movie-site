@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JiroViral - Watch Movies & TV Shows Online</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <!-- Swiper CSS for advanced carousels -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+</head>
+<body>
+    <header class="main-header">
+        <nav class="navbar">
+            <a href="index.html" class="logo">JiroViral</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="movies.html">Movies</a></li>
+                <li><a href="series.html">TV Series</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Genres <i class="fas fa-caret-down"></i></a>
+                    <div class="dropdown-content" id="genreDropdown">
+                        <!-- Genres will be loaded here by JavaScript -->
+                    </div>
+                </li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search for movies or series...">
+                <button id="searchButton"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="user-auth">
+                <a href="login.html" class="btn">Login</a>
+                <a href="register.html" class="btn primary">Register</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>Watch Unlimited Movies & TV Shows</h1>
+                <p>Stream your favorite content anytime, anywhere. High quality, no interruptions.</p>
+                <a href="movies.html" class="btn hero-btn">Explore Movies</a>
+                <a href="series.html" class="btn hero-btn secondary">Explore TV Series</a>
+            </div>
+        </section>
+
+        <section class="featured-movies section-padding">
+            <div class="container">
+                <h2>Featured Movies</h2>
+                <div class="movie-grid" id="featuredMoviesGrid">
+                    <!-- Movie cards will be dynamically loaded here by JavaScript -->
+                </div>
+                <div class="text-center mt-4">
+                    <a href="movies.html" class="btn view-more-btn">View All Movies <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="latest-series section-padding bg-light-dark">
+            <div class="container">
+                <h2>Latest TV Series</h2>
+                <div class="series-grid" id="latestSeriesGrid">
+                    <!-- TV series cards will be dynamically loaded here by JavaScript -->
+                </div>
+                <div class="text-center mt-4">
+                    <a href="series.html" class="btn view-more-btn">View All Series <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="trending-now section-padding">
+            <div class="container">
+                <h2>Trending Now</h2>
+                <!-- Swiper -->
+                <div class="swiper-container trending-swiper">
+                    <div class="swiper-wrapper" id="trendingCarousel">
+                        <!-- Trending content will be dynamically loaded here by JavaScript -->
+                    </div>
+                    <!-- Add Pagination -->
+                    <div class="swiper-pagination"></div>
+                    <!-- Add Navigation -->
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="call-to-action section-padding bg-primary-gradient">
+            <div class="container text-center">
+                <h2>Ready to Watch?</h2>
+                <p>Join JiroViral today and start streaming thousands of titles instantly.</p>
+                <a href="register.html" class="btn cta-btn">Sign Up Now</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-content">
+            <div class="footer-section about">
+                <h3>About JiroViral</h3>
+                <p>JiroViral is your ultimate destination for high-quality movie and TV series streaming. Discover new releases, classic films, and binge-worthy shows.</p>
+            </div>
+            <div class="footer-section links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">DMCA Policy</a></li>
+                    <li><a href="#">Support Center</a></li>
+                    <li><a href="#">Sitemap</a></li>
+                </ul>
+            </div>
+            <div class="footer-section social">
+                <h3>Follow Us</h3>
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            </div>
+            <div class="footer-section newsletter">
+                <h3>Newsletter</h3>
+                <p>Stay updated with our latest releases and news.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit" class="btn">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                &copy; 2023 JiroViral. All Rights Reserved. Designed with <i class="fas fa-heart"></i> by JiroViral Team.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/carousel.js"></script>
+</body>
+</html>
