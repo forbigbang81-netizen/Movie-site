@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch: Movie/Series Title - JiroViral</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/player.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="player-page">
+    <header class="player-header">
+        <a href="index.html" class="logo">JiroViral</a>
+        <a href="javascript:history.back()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    </header>
+
+    <main class="player-main">
+        <!-- Video Container with Proxy Wrapper -->
+        <div class="video-container">
+            <div id="video-wrapper" class="video-wrapper">
+                <video id="main-video" controls crossorigin="anonymous">
+                    <source src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <!-- Custom Controls Overlay (Optional) -->
+                <div class="video-overlay">
+                    <div class="play-btn-overlay"><i class="fas fa-play"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <!-- Info & Episode List -->
+            <div class="info-sidebar">
+                <div class="media-info">
+                    <h1 id="media-title">Movie/Series Title</h1>
+                    <div class="meta-tags">
+                        <span class="year">2023</span>
+                        <span class="rating">TV-MA</span>
+                        <span class="duration">2h 15m</span>
+                    </div>
+                    <p id="media-description">Description goes here...</p>
+                    <div class="action-buttons">
+                        <button class="btn btn-watchlist"><i class="far fa-bookmark"></i> Add to List</button>
+                        <button class="btn btn-like"><i class="far fa-heart"></i> Like</button>
+                    </div>
+                </div>
+
+                <!-- Episode List (For Series) -->
+                <div class="episode-list-container" id="episode-list">
+                    <h3>Episodes</h3>
+                    <ul class="episode-list">
+                        <!-- Episodes loaded via JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h3>Comments <span id="comment-count">(0)</span></h3>
+                
+                <!-- Comment Form (Only visible if logged in) -->
+                <div class="comment-form-container" id="comment-form-container">
+                    <form id="comment-form">
+                        <textarea id="comment-text" placeholder="Write a comment..." required></textarea>
+                        <button type="submit" class="btn">Post Comment</button>
+                    </form>
+                </div>
+                <div id="login-prompt" class="login-prompt" style="display: none;">
+                    <a href="login.html">Login</a> to post a comment.
+                </div>
+
+                <!-- Comments List -->
+                <div class="comments-list" id="comments-list">
+                    <!-- Comments loaded via JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/player.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
