@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CineVerse | Stream Ultimate Cinema</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js" defer></script>
+    <script type="module" src="js/auth.js"></script>
+</head>
+<body class="lock-scroll">
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="ambient-glow"></div>
+
+    <div class="modal-overlay" id="verification-popup">
+        <div class="verification-modal">
+            <div class="modal-icon">✓</div>
+            <h2>Account Authorized</h2>
+            <p>Verification successful! Your Gmail is authenticated and your workspace secure.</p>
+            <button class="btn btn-primary" onclick="window.enterDashboard()">Enter Dashboard</button>
+        </div>
+    </div>
+
+    <div id="view-app-landing" class="app-view active">
+        <div class="landing-wrapper">
+            <header>
+                <div class="logo" onclick="window.switchPane('landing')">CINE<span>VERSE</span></div>
+            </header>
+
+            <main class="intro-container">
+                <div id="pane-landing" class="view-pane active">
+                    <div class="tagline">Now Streaming Everywhere</div>
+                    <h1>Stories that demand to be seen.</h1>
+                    <p class="description">Access thousands of award-winning films, independent masterpieces, and exclusive originals in stunning 4K HDR.</p>
+                    <div class="cta-group">
+                        <button class="btn btn-primary" onclick="window.switchPane('register')">Create Account</button>
+                        <button class="btn btn-secondary" onclick="window.switchPane('login')">Sign In</button>
+                    </div>
+                </div>
+
+                <div id="pane-register" class="view-pane">
+                    <div class="tagline">Get Started</div>
+                    <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Create Account</h1>
+                    <form onsubmit="handleAuth(event, 'register')">
+                        <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" required placeholder="name@example.com"></div>
+                        <div class="form-group"><label>Password</label><input type="password" id="reg-pass" required placeholder="••••••••"></div>
+                        <button type="submit" class="btn btn-submit">Register</button>
+                    </form>
+                    <div class="form-footer">Already have an account? <a href="#" onclick="window.switchPane('login')">Sign In</a></div>
+                </div>
+
+                <div id="pane-login" class="view-pane">
+                    <div class="tagline">Welcome Back</div>
+                    <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Sign In</h1>
+                    <form onsubmit="handleAuth(event, 'login')">
+                        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" required placeholder="name@example.com"></div>
+                        <div class="form-group"><label>Password</label><input type="password" id="login-pass" required placeholder="••••••••"></div>
+                        <button type="submit" class="btn btn-submit">Sign In</button>
+                    </form>
+                    <div class="form-footer">New to CineVerse? <a href="#" onclick="window.switchPane('register')">Create an account</a></div>
+                </div>
+            </main>
+
+            <footer style="color: rgba(255,255,255,0.2); font-size: 0.8rem;">&copy; 2026 CineVerse Entertainment.</footer>
+        </div>
+    </div>
+
+    <div id="view-app-dashboard" class="app-view">
+        <nav class="dash-nav">
+            <div class="nav-left">
+                <div class="logo" style="font-size: 1.3rem;" onclick="window.filterGenre('All', document.querySelector('.genre-tag'))">CINE<span>VERSE</span></div>
+            </div>
+            <div class="nav-right">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search live global database..." oninput="window.executeSearch()">
+                    <div class="search-dropdown" id="search-dropdown-box"></div>
+                </div>
+                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 20px; white-space: nowrap;" onclick="window.handleLogout()">Sign Out</button>
+            </div>
+        </nav>
+
+        <div class="genre-bar" id="genre-filter-bar">
+            <div class="genre-tag active" onclick="window.filterGenre('All', this)">All Content</div>
+            <div class="genre-tag" onclick="window.filterGenre('Action', this, 28)">Action</div>
+            <div class="genre-tag" onclick="window.filterGenre('Sci-Fi', this, 878)">Sci-Fi</div>
+            <div class="genre-tag" onclick="window.filterGenre('Drama', this, 18)">Drama</div>
+            <div class="genre-tag" onclick="window.filterGenre('Thriller', this, 53)">Thriller</div>
+        </div>
+
+        <main class="main-content">
+            <div class="movie-row" id="row-continue">
+                <div class="row-title">Continue Watching</div>
+                <div class="movie-grid" id="grid-continue"></div>
+            </div>
+
+            <div class="movie-row" id="row-top10">
+                <div class="row-title">Top 10 Movies & Shows Today</div>
+                <div class="movie-grid" id="grid-top10"></div>
+            </div>
+
+            <div class="movie-row" id="row-trending">
+                <div class="row-title">Trending Masterpieces</div>
+                <div class="movie-grid" id="grid-trending"></div>
+            </div>
+        </main>
+    </div>
+
+    <div id="details-drawer" class="details-drawer">
+        <div class="close-drawer-btn" onclick="window.closeDetails()">✕</div>
+        
+        <div id="player-zone" class="player-viewport">
+            <iframe id="video-iframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        </div>
+
+        <div id="drawer-banner-img" class="drawer-banner"></div>
+        
+        <div class="drawer-body">
+            <h2 id="drawer-title" class="drawer-main-title">Loading Title...</h2>
+            <div class="drawer-meta">
+                <span id="drawer-year">2026</span>
+                <span id="drawer-rating" style="color: #ffd700; font-weight: bold;">★ 0.0</span>
+                <span id="drawer-type" style="letter-spacing: 1px; text-transform: uppercase; color: var(--accent-secondary);">MOVIE</span>
+            </div>
+
+            <div class="server-control-hub">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-right: 0.5rem;">Select Server:</span>
+                <button id="server1-btn" class="server-btn" onclick="window.switchServer(1)">⚡ Server 1 (Primary)</button>
+                <button id="server2-btn" class="server-btn" onclick="window.switchServer(2)">🌐 Server 2 (Backup)</button>
+            </div>
+
+            <p id="drawer-synopsis" class="drawer-overview">Fetching media overview profiles...</p>
+            
+            <div class="related-row-title">More Related Content Like This</div>
+            <div class="movie-grid" id="drawer-related-grid"></div>
+        </div>
+    </div>
+</body>
+</html>
