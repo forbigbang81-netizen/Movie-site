@@ -5,27 +5,8 @@ const TMDB_BG_IMG = "https://image.tmdb.org/t/p/original";
 
 let masterCatalog = [];
 let currentActiveMedia = { id: '', type: '' };
-let catalogLoaded = false;
 
-window.switchPane = function(paneName) {
-    document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById('pane-' + paneName);
-    if (target) target.classList.add('active');
-};
-
-window.enterDashboard = async function() {
-    document.getElementById('verification-popup').classList.remove('active');
-    document.getElementById('view-app-landing').classList.remove('active');
-    
-    const dashboard = document.getElementById('view-app-dashboard');
-    dashboard.classList.add('active');
-    document.body.classList.remove('lock-scroll'); 
-    
-    if (!catalogLoaded) {
-        await loadTMDBContent();
-    }
-};
-
+// Triggered automatically on page load now
 async function loadTMDBContent() {
     try {
         const trendRes = await fetch(`${TMDB_BASE}/trending/all/week?api_key=${TMDB_KEY}`);
@@ -39,7 +20,6 @@ async function loadTMDBContent() {
         renderTop10(top10List);
         buildDashboard(masterCatalog);
         renderContinueWatching(masterCatalog.slice(3, 5)); 
-        catalogLoaded = true;
     } catch (err) {
         console.error("API Integration disruption context:", err);
     }
@@ -345,61 +325,6 @@ function animate() {
     requestAnimationFrame(animate);
 }
 animate();
-// --- Global Authentication Bridge ---
-document.addEventListener("DOMContentLoaded", () => {
-    const regForm = document.getElementById("register-form");
-    const loginForm = document.getElementById("login-form");
 
-    if (regForm) {
-        regForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            if (!window.firebaseAuthInstance) return alert("Firebase system is still initializing. Please wait a moment.");
-            
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-pass').value;
-            try {
-                const userCredential = await window.firebaseCreateUser(window.firebaseAuthInstance, email, password);
-                await window.firebaseSendVerification(userCredential.user);
-                alert("Verification link sent! Check your Gmail inbox.");
-                window.switchPane('landing');
-            } catch (error) { 
-                alert("Registration Error: " + error.message); 
-            }
-        });
-    }
-
-    if (loginForm) {
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            if (!window.firebaseAuthInstance) return alert("Firebase system is still initializing. Please wait a moment.");
-
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-pass').value;
-            try {
-                const userCredential = await window.firebaseSignIn(window.firebaseAuthInstance, email, password);
-                if (!userCredential.user.emailVerified) {
-                    alert("Please complete verification via the email sent to your inbox first.");
-                    await window.firebaseSignOut(window.firebaseAuthInstance);
-                } else {
-                    const popup = document.getElementById('verification-popup');
-                    if (popup) popup.classList.add('active');
-                }
-            } catch (error) { 
-                alert("Login Error: " + error.message); 
-            }
-        });
-    }
-});
-
-window.handleLogout = async function() {
-    if (!window.firebaseAuthInstance) return;
-    try {
-        await window.firebaseSignOut(window.firebaseAuthInstance);
-        if (typeof window.closeDetails === "function") {
-            window.closeDetails();
-        }
-    } catch (error) { 
-        alert(error.message); 
-    }
-};
-
+// NEW: Automate instant load sequence on structural stabilization
+document.addEventListener("DOMContentLoaded", loadTMDBContent);
