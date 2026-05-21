@@ -6,41 +6,8 @@ const TMDB_BG_IMG = "https://image.tmdb.org/t/p/original";
 let masterCatalog = [];
 let currentActiveMedia = { id: '', type: '' };
 
-// Triggered automatically on page load now with absolute fail-safe fallback
-async function loadTMDBContent() {
-    try {
-        const trendRes = await fetch(`${TMDB_BASE}/trending/all/week?api_key=${TMDB_KEY}`);
-        if (!trendRes.ok) throw new Error("API Key restricted or expired");
-        
-        const trendData = await trendRes.json();
-        masterCatalog = trendData.results || [];
-
-        const popRes = await fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&page=1`);
-        const popData = await popRes.json();
-        const top10List = popData.results ? popData.results.slice(0, 10) : [];
-
-        renderTop10(top10List);
-        buildDashboard(masterCatalog);
-        renderContinueWatching(masterCatalog.slice(3, 5)); 
-    } catch (err) {
-        console.warn("TMDB API Key blocked or restricted. Initiating emergency offline backup arrays...", err);
-        
-        // FOOLPROOF BACKUP DATA: This forces cards onto the screen even if the API is down
-        masterCatalog = [
-            { id: 27205, title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O." },
-            { id: 157336, title: "Interstellar", release_date: "2014-11-05", vote_average: 8.4, poster_path: "/gEU2vYmkafg5m3FYv6vVhyjClv2.jpg", backdrop_path: "/xJHokn8gto6mZ8PycmdvU6VmN8K.jpg", overview: "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel." },
-            { id: 155, title: "The Dark Knight", release_date: "2008-07-16", vote_average: 8.5, poster_path: "/qJ2tWw7B6g27vC3HG6gGvCUwUAs.jpg", backdrop_path: "/nMK966lh9wXgjo993vunw37g9j6.jpg", overview: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice." },
-            { id: 603, title: "The Matrix", release_date: "1999-03-30", vote_average: 8.2, poster_path: "/f89U3w9zEQwJh2YgZpZ97Bh2XgX.jpg", backdrop_path: "/7u36496gYvXmGZ3w3vVhyjClv2.jpg", overview: "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth--the life he knows is the elaborate deception of an evil cyber-intelligence." },
-            { id: 19995, title: "Avatar", release_date: "2009-12-10", vote_average: 7.5, poster_path: "/kYgGlvX12g6tV66k1wQ7pYvOfCl.jpg", backdrop_path: "/vCHw9vly4vRK3g04gY2gL7u364.jpg", overview: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the world he feels is his home." }
-        ];
-
-        renderTop10(masterCatalog);
-        buildDashboard(masterCatalog);
-        renderContinueWatching(masterCatalog.slice(0, 2));
-    }
-}
-
-function buildDashboard(movies) {
+// Main renderer functions explicitly attached to window to prevent global drops
+window.buildDashboard = function(movies) {
     const trendGrid = document.getElementById('grid-trending');
     if (!trendGrid) return;
     trendGrid.innerHTML = "";
@@ -49,7 +16,7 @@ function buildDashboard(movies) {
         const title = movie.title || movie.name || "Untitled Production";
         const date = (movie.release_date || movie.first_air_date || "2026").substring(0,4);
         const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
-        const poster = movie.poster_path ? (TMDB_IMG + movie.poster_path) : "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&q=80";
+        const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
         const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
 
         trendGrid.innerHTML += `
@@ -67,9 +34,9 @@ function buildDashboard(movies) {
             </div>
         `;
     });
-}
+};
 
-function renderTop10(movies) {
+window.renderTop10 = function(movies) {
     const top10Grid = document.getElementById('grid-top10');
     if (!top10Grid) return;
     top10Grid.innerHTML = "";
@@ -77,7 +44,7 @@ function renderTop10(movies) {
     movies.forEach((movie, index) => {
         const title = movie.title || movie.name || "Global Hit Film";
         const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "9.0";
-        const poster = movie.poster_path ? (TMDB_IMG + movie.poster_path) : "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80";
+        const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
         const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
 
         top10Grid.innerHTML += `
@@ -96,9 +63,9 @@ function renderTop10(movies) {
             </div>
         `;
     });
-}
+};
 
-function renderContinueWatching(movies) {
+window.renderContinueWatching = function(movies) {
     const contGrid = document.getElementById('grid-continue');
     if (!contGrid) return;
     contGrid.innerHTML = "";
@@ -106,7 +73,7 @@ function renderContinueWatching(movies) {
     const simulatedProgress = [68, 35];
     movies.forEach((movie, index) => {
         const title = movie.title || movie.name;
-        const poster = movie.poster_path ? (TMDB_IMG + movie.poster_path) : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&q=80";
+        const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
         const progress = simulatedProgress[index] || 50;
         const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
 
@@ -126,6 +93,38 @@ function renderContinueWatching(movies) {
             </div>
         `;
     });
+};
+
+async function loadTMDBContent() {
+    try {
+        const trendRes = await fetch(`${TMDB_BASE}/trending/all/week?api_key=${TMDB_KEY}`);
+        if (!trendRes.ok) throw new Error("API Limit");
+        
+        const trendData = await trendRes.json();
+        masterCatalog = trendData.results || [];
+
+        const popRes = await fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&page=1`);
+        const popData = await popRes.json();
+        const top10List = popData.results ? popData.results.slice(0, 10) : [];
+
+        window.renderTop10(top10List);
+        window.buildDashboard(masterCatalog);
+        window.renderContinueWatching(masterCatalog.slice(3, 5)); 
+    } catch (err) {
+        console.warn("API Restriction hit. Launching absolute fail-safe fallback arrays.");
+        
+        // FOOLPROOF ABSOLUTE IMAGE URLS
+        masterCatalog = [
+            { id: 27205, title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through dream-sharing technology." },
+            { id: 157336, title: "Interstellar", release_date: "2014-11-05", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/gEU2vYmkafg5m3FYv6vVhyjClv2.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/xJHokn8gto6mZ8PycmdvU6VmN8K.jpg", overview: "Explorers travel through a wormhole in space in an attempt to ensure humanity's survival." },
+            { id: 155, title: "The Dark Knight", release_date: "2008-07-16", vote_average: 8.5, poster_path: "https://image.tmdb.org/t/p/w300/qJ2tWw7B6g27vC3HG6gGvCUwUAs.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/nMK966lh9wXgjo993vunw37g9j6.jpg", overview: "Batman raises the stakes in his war on crime with the help of Lt. Jim Gordon and District Attorney Harvey Dent." },
+            { id: 603, title: "The Matrix", release_date: "1999-03-30", vote_average: 8.2, poster_path: "https://image.tmdb.org/t/p/w300/f89U3w9zEQwJh2YgZpZ97Bh2XgX.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/7u36496gYvXmGZ3w3vVhyjClv2.jpg", overview: "A computer hacker learns from mysterious rebels about the true nature of his reality." }
+        ];
+
+        window.renderTop10(masterCatalog);
+        window.buildDashboard(masterCatalog);
+        window.renderContinueWatching(masterCatalog.slice(0, 2));
+    }
 }
 
 window.showDetails = async function(id, type) {
@@ -135,13 +134,6 @@ window.showDetails = async function(id, type) {
     currentActiveMedia = { id: id, type: type };
     drawer.classList.add('active');
     window.closeVideoPlayer(); 
-
-    document.getElementById('drawer-title').innerText = "Syncing Catalog Data...";
-    document.getElementById('drawer-synopsis').innerText = "Contacting database systems...";
-    document.getElementById('drawer-related-grid').innerHTML = "";
-
-    document.getElementById('server1-btn').classList.remove('active');
-    document.getElementById('server2-btn').classList.remove('active');
 
     try {
         const detailFetch = fetch(`${TMDB_BASE}/${type}/${id}?api_key=${TMDB_KEY}`);
@@ -160,39 +152,18 @@ window.showDetails = async function(id, type) {
         document.getElementById('drawer-year').innerText = date;
         document.getElementById('drawer-rating').innerText = `★ ${rating}`;
         document.getElementById('drawer-type').innerText = type;
-        document.getElementById('drawer-synopsis').innerText = details.overview || "No data analytics profiles synchronized for this content listing item.";
+        document.getElementById('drawer-synopsis').innerText = details.overview || "No data analytics profiles synchronized.";
         document.getElementById('drawer-banner-img').style.backgroundImage = `url('${bgPath}')`;
-
-        const relatedGrid = document.getElementById('drawer-related-grid');
-        const recommendations = related.results ? related.results.slice(0, 6) : [];
-
-        if(recommendations.length > 0) {
-            recommendations.forEach(item => {
-                const rTitle = item.title || item.name || "Related Title";
-                const rDate = (item.release_date || item.first_air_date || "2026").substring(0,4);
-                const rRating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
-                const rPoster = item.poster_path ? (TMDB_IMG + item.poster_path) : "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&q=80";
-
-                relatedGrid.innerHTML += `
-                    <div class="movie-card" onclick="window.showDetails(${item.id}, '${type}')">
-                        <div class="card-img-wrapper">
-                            <img src="${rPoster}" alt="${rTitle}">
-                        </div>
-                        <div class="card-details">
-                            <h3>${rTitle}</h3>
-                            <div class="meta-line">
-                                <span>${rDate}</span>
-                                <span class="rating">★ ${rRating}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        } else {
-            relatedGrid.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">No matching recommendations detected.</p>`;
-        }
     } catch (err) {
-        console.error("Disruption loading drawer view execution arrays:", err);
+        // Fallback for details view window data
+        const localData = masterCatalog.find(m => m.id === id);
+        if(localData) {
+            document.getElementById('drawer-title').innerText = localData.title;
+            document.getElementById('drawer-year').innerText = localData.release_date.substring(0,4);
+            document.getElementById('drawer-rating').innerText = `★ ${localData.vote_average}`;
+            document.getElementById('drawer-synopsis').innerText = localData.overview;
+            document.getElementById('drawer-banner-img').style.backgroundImage = `url('${localData.backdrop_path}')`;
+        }
     }
 };
 
@@ -200,30 +171,20 @@ window.switchServer = function(serverId) {
     const playerZone = document.getElementById('player-zone');
     const videoIframe = document.getElementById('video-iframe');
     const bannerImg = document.getElementById('drawer-banner-img');
-    const btn1 = document.getElementById('server1-btn');
-    const btn2 = document.getElementById('server2-btn');
 
     let embedUrl = "";
     const id = currentActiveMedia.id;
     const type = currentActiveMedia.type;
 
     if (serverId === 1) {
-        btn1.classList.add('active');
-        btn2.classList.remove('active');
-        embedUrl = type === 'movie' 
-            ? `https://vidsrc.me/embed/movie?tmdb=${id}`
-            : `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`;
+        embedUrl = type === 'movie' ? `https://vidsrc.me/embed/movie?tmdb=${id}` : `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`;
     } else {
-        btn1.classList.remove('active');
-        btn2.classList.add('active');
-        embedUrl = type === 'movie' 
-            ? `https://vidsrc.cc/vidsrc/movie/${id}`
-            : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
+        embedUrl = type === 'movie' ? `https://vidsrc.cc/vidsrc/movie/${id}` : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
     }
 
-    bannerImg.classList.add('hidden');
-    playerZone.classList.add('active');
-    videoIframe.src = embedUrl;
+    if(bannerImg) bannerImg.classList.add('hidden');
+    if(playerZone) playerZone.classList.add('active');
+    if(videoIframe) videoIframe.src = embedUrl;
 };
 
 window.closeVideoPlayer = function() {
@@ -244,17 +205,12 @@ window.closeDetails = function() {
 window.executeSearch = async function() {
     const query = document.getElementById('search-input').value.trim().toLowerCase();
     const dropBox = document.getElementById('search-dropdown-box');
-    
-    if(!query) {
-        dropBox.classList.remove('active');
-        return;
-    }
+    if(!query) { dropBox.classList.remove('active'); return; }
 
     try {
         const searchRes = await fetch(`${TMDB_BASE}/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`);
         const searchData = await searchRes.json();
         const matches = searchData.results ? searchData.results.slice(0, 6) : [];
-
         dropBox.innerHTML = "";
 
         if(matches.length > 0) {
@@ -262,84 +218,44 @@ window.executeSearch = async function() {
             matches.forEach(movie => {
                 const title = movie.title || movie.name || "Media Title";
                 const type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
-                const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
                 const poster = movie.poster_path ? (TMDB_IMG + movie.poster_path) : "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=100&q=80";
-                
                 dropBox.innerHTML += `
                     <div class="search-item" onclick="window.showDetails(${movie.id}, '${type}'); document.getElementById('search-dropdown-box').classList.remove('active');">
                         <img src="${poster}">
-                        <div class="search-item-info">
-                            <h4>${title}</h4>
-                            <p>${type.toUpperCase()} • ★ ${rating}</p>
-                        </div>
-                    </div>
-                `;
+                        <div class="search-item-info"><h4>${title}</h4></div>
+                    </div>`;
             });
-        } else {
-            dropBox.innerHTML = `<div class="search-item"><div class="search-item-info"><h4>No matches discovered</h4></div></div>`;
-            dropBox.classList.add('active');
         }
-    } catch (err) {
-        console.error("Search index module execution error:", err);
-    }
+    } catch (e) {}
 };
 
 window.filterGenre = function(genreName, element, genreId) {
     document.querySelectorAll('.genre-tag').forEach(t => t.classList.remove('active'));
     if (element) element.classList.add('active');
-
-    if(genreName === 'All') {
-        buildDashboard(masterCatalog);
-    } else if (genreId) {
-        const filtered = masterCatalog.filter(m => m.genre_ids && m.genre_ids.includes(genreId));
-        buildDashboard(filtered);
-    }
+    if(genreName === 'All') { window.buildDashboard(masterCatalog); } 
+    else if (genreId) { window.buildDashboard(masterCatalog.filter(m => m.genre_ids && m.genre_ids.includes(genreId))); }
 };
 
-document.addEventListener('click', (e) => {
-    const box = document.getElementById('search-dropdown-box');
-    if(box && !e.target.closest('.search-container')) {
-        box.classList.remove('active');
-    }
-});
-
-// Ambient Starfield Canvas Engine
+// Canvas Engine Initialization
 const canvas = document.getElementById('bg-canvas');
-const ctx = canvas.getContext('2d');
-let width = canvas.width = window.innerWidth;
-let height = canvas.height = window.innerHeight;
-
-window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-});
-
-class Particle {
-    constructor() { this.reset(); }
-    reset() {
-        this.x = Math.random() * width; this.y = Math.random() * height;
-        this.size = Math.random() * 1.5 + 0.4; this.speedY = -Math.random() * 0.3 - 0.1; 
-        this.alpha = Math.random() * 0.4 + 0.1;
+if(canvas) {
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    class Particle {
+        constructor() { this.reset(); }
+        reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.size = Math.random() * 1.5 + 0.4; this.speedY = -Math.random() * 0.3 - 0.1; this.alpha = Math.random() * 0.4 + 0.1; }
+        update() { this.y += this.speedY; if (this.y < 0) { this.reset(); this.y = height; } }
+        draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore(); }
     }
-    update() {
-        this.y += this.speedY;
-        if (this.y < 0) { this.reset(); this.y = height; }
-    }
-    draw() {
-        ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = '#ffffff';
-        ctx.fill(); ctx.restore();
-    }
+    const particles = Array.from({ length: 30 }, () => new Particle());
+    function animate() { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+    animate();
 }
 
-const particles = Array.from({ length: 40 }, () => new Particle());
-function animate() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = 'rgba(5, 5, 8, 0.5)'; ctx.fillRect(0, 0, width, height);
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(animate);
+// Auto fire setup sequence seamlessly
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadTMDBContent);
+} else {
+    loadTMDBContent();
 }
-animate();
-
-// Automate instant load sequence on structural stabilization
-document.addEventListener("DOMContentLoaded", loadTMDBContent);
