@@ -339,4 +339,91 @@
 
     window.switchServer = function(serverId) {
         const playerZone = document.getElementById('player-zone');
-        c
+        const videoIframe = document.getElementById('video-iframe');
+        const id = currentActiveMedia.id;
+        const type = currentActiveMedia.type;
+
+        let embedUrl = serverId === 1 
+            ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+            : `https://vidsrc.cc/vidsrc/movie/${id}`;
+
+        if(type === 'tv') {
+            embedUrl = serverId === 1
+                ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`
+                : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
+        }
+
+        if(playerZone) playerZone.classList.add('active');
+        if(videoIframe) videoIframe.src = embedUrl;
+    };
+
+    window.closeVideoPlayer = function() {
+        const playerZone = document.getElementById('player-zone');
+        const videoIframe = document.getElementById('video-iframe');
+        if(playerZone) playerZone.classList.remove('active');
+        if(videoIframe) videoIframe.src = ""; 
+    };
+
+    window.closeDetails = function() {
+        window.closeVideoPlayer();
+        document.getElementById('details-drawer').classList.remove('active');
+    };
+
+    window.executeSearch = async function() {
+        const query = document.getElementById('search-input').value.trim().toLowerCase();
+        const dropBox = document.getElementById('search-dropdown-box');
+        if(!query) { dropBox.classList.remove('active'); return; }
+
+        try {
+            const searchRes = await fetch(`${TMDB_BASE}/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`);
+            const searchData = await searchRes.json();
+            const matches = searchData.results ? searchData.results.slice(0, 6) : [];
+            dropBox.innerHTML = "";
+
+            if(matches.length > 0) {
+                dropBox.classList.add('active');
+                matches.forEach(movie => {
+                    const title = movie.title || movie.name || "Media Title";
+                    const type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+                    const poster = movie.poster_path ? (TMDB_IMG + movie.poster_path) : "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=100&q=80";
+                    dropBox.innerHTML += `
+                        <div class="search-item" onclick="window.showDetails(${movie.id}, '${type}'); document.getElementById('search-dropdown-box').classList.remove('active');">
+                            <img src="${poster}">
+                            <div class="search-item-info"><h4>${title}</h4></div>
+                        </div>`;
+                });
+            }
+        } catch (e) {}
+    };
+
+    window.filterGenre = function(genreName, element, genreId) {
+        document.querySelectorAll('.genre-tag').forEach(t => t.classList.remove('active'));
+        if (element) element.classList.add('active');
+        if(genreName === 'All') { 
+            window.buildDashboard(masterCatalog); 
+        } else if (genreId) { 
+            window.buildDashboard(masterCatalog.filter(m => m.genre_ids && m.genre_ids.includes(genreId))); 
+        }
+    };
+
+    // Particles Canvas Engine
+    const canvas = document.getElementById('bg-canvas');
+    if(canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        class Particle {
+            constructor() { this.reset(); }
+            reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.size = Math.random() * 1.5 + 0.4; this.speedY = -Math.random() * 0.3 - 0.1; this.alpha = Math.random() * 0.4 + 0.1; }
+            update() { this.y += this.speedY; if (this.y < 0) { this.reset(); this.y = height; } }
+            draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore(); }
+        }
+        const particles = Array.from({ length: 20 }, () => new Particle());
+        function animate() { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        animate();
+    }
+
+    loadTMDBContent();
+    </script>
+</body>
+</html>
