@@ -6,79 +6,11 @@
     <title>CineVerse | Stream Ultimate Cinema</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/app.js" defer></script>
-    <script type="module" src="js/auth.js"></script>
 </head>
-<body class="lock-scroll">
-
-    <canvas id="bg-canvas"></canvas>
+<body> <canvas id="bg-canvas"></canvas>
     <div class="ambient-glow"></div>
 
-    <div class="modal-overlay" id="verification-popup">
-        <div class="verification-modal">
-            <div class="modal-icon">✓</div>
-            <h2>Account Authorized</h2>
-            <p>Verification successful! Your Gmail is authenticated and your workspace secure.</p>
-            <button class="btn btn-primary" onclick="window.enterDashboard()">Enter Dashboard</button>
-        </div>
-    </div>
-
-    <div id="view-app-landing" class="app-view active">
-        <div class="landing-wrapper">
-            <header>
-                <div class="logo" onclick="window.switchPane('landing')">CINE<span>VERSE</span></div>
-            </header>
-
-            <main class="intro-container">
-                <div id="pane-landing" class="view-pane active">
-                    <div class="tagline">Now Streaming Everywhere</div>
-                    <h1>Stories that demand to be seen.</h1>
-                    <p class="description">Access thousands of award-winning films, independent masterpieces, and exclusive originals in stunning 4K HDR.</p>
-                    <div class="cta-group">
-                        <button class="btn btn-primary" onclick="window.switchPane('register')">Create Account</button>
-                        <button class="btn btn-secondary" onclick="window.switchPane('login')">Sign In</button>
-                    </div>
-                </div>
-
-                <div id="pane-register" class="view-pane">
-                    <div class="tagline">Get Started</div>
-                    <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Create Account</h1>
-                    <form id="register-form">
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="reg-email" required placeholder="name@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="reg-pass" required placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="btn btn-submit">Register</button>
-                    </form>
-                    <div class="form-footer">Already have an account? <a href="#" onclick="window.switchPane('login')">Sign In</a></div>
-                </div>
-
-                <div id="pane-login" class="view-pane">
-                    <div class="tagline">Welcome Back</div>
-                    <h1 style="font-size: 1.8rem; margin-bottom: 1.8rem;">Sign In</h1>
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="login-email" required placeholder="name@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="login-pass" required placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="btn btn-submit">Sign In</button>
-                    </form>
-                    <div class="form-footer">New to CineVerse? <a href="#" onclick="window.switchPane('register')">Create an account</a></div>
-                </div>
-            </main>
-
-            <footer style="color: rgba(255,255,255,0.2); font-size: 0.8rem;">&copy; 2026 CineVerse Entertainment.</footer>
-        </div>
-    </div>
-
-    <div id="view-app-dashboard" class="app-view">
+    <div id="view-app-dashboard" class="app-view active">
         <nav class="dash-nav">
             <div class="nav-left">
                 <div class="logo" style="font-size: 1.3rem;" onclick="window.filterGenre('All', document.querySelector('.genre-tag'))">CINE<span>VERSE</span></div>
@@ -88,7 +20,6 @@
                     <input type="text" id="search-input" placeholder="Search live global database..." oninput="window.executeSearch()">
                     <div class="search-dropdown" id="search-dropdown-box"></div>
                 </div>
-                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 20px; white-space: nowrap;" onclick="window.handleLogout()">Sign Out</button>
             </div>
         </nav>
 
