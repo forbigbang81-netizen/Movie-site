@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CineVerse | Stream Ultimate Cinema</title>
     <link rel="stylesheet" href="css/styles.css">
+    
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
     <style>
-        /* Embedded architectural structural patches to hold new close mechanics */
         .movie-card {
             position: relative;
         }
@@ -34,9 +37,26 @@
             border-color: #ff3b30;
             transform: scale(1.1);
         }
-        /* Hidden by default state pattern rule matrix */
         #row-continue {
             display: none;
+        }
+        /* Native VideoJS Player Wrapper Frame Configuration */
+        .native-player-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #000;
+            z-index: 5;
+        }
+        .native-player-container.active {
+            display: block;
+        }
+        .video-js {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 </head>
@@ -89,6 +109,9 @@
         
         <div id="player-zone" class="player-viewport">
             <iframe id="video-iframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+            <div id="native-player-zone" class="native-player-container">
+                <video id="cineverse-videojs" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto"></video>
+            </div>
         </div>
 
         <div id="drawer-banner-img" class="drawer-banner"></div>
@@ -101,10 +124,11 @@
                 <span id="drawer-type" style="letter-spacing: 1px; text-transform: uppercase; color: var(--accent-secondary);">MOVIE</span>
             </div>
 
-            <div class="server-control-hub">
-                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-right: 0.5rem;">Select Server:</span>
-                <button id="server1-btn" class="server-btn" onclick="window.switchServer(1)">⚡ Server 1 (Primary)</button>
-                <button id="server2-btn" class="server-btn" onclick="window.switchServer(2)">🌐 Server 2 (Backup)</button>
+            <div class="server-control-hub" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Select Server:</span>
+                <button id="server1-btn" class="server-btn" onclick="window.switchServer(1)">⚡ Server 1</button>
+                <button id="server2-btn" class="server-btn" onclick="window.switchServer(2)">🌐 Server 2</button>
+                <button id="server3-btn" class="server-btn" onclick="window.switchServer(3)">🔌 Server 3 (VideoJS)</button>
             </div>
 
             <p id="drawer-synopsis" class="drawer-overview">Fetching media overview profiles...</p>
@@ -123,36 +147,36 @@
     let masterCatalog = [];
     let top20Catalog = [];
     let currentActiveMedia = { id: '', type: '' };
+    let vjsPlayer = null;
 
-    // May 2026 verified live tracking array data models (Fallback sync catalog block matrix)
     const officialMay2026Data = [
-        { id: 999101, genre_ids: [878, 28], title: "The Mandalorian & Grogu", release_date: "2026-05-22", vote_average: 8.9, poster_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80", overview: "The legendary duo returns to the galactic theater as lingering Imperial warlords pose a new structural challenge to the Outer Rim alliances." },
+        { id: 999101, genre_ids: [878, 28], title: "The Mandalorian & Grogu", release_date: "2026-05-22", vote_average: 8.9, poster_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80", overview: "The legendary duo returns to the galactic theater as lingering Imperial warlords pose a new challenge to the Outer Rim alliances." },
         { id: 999102, genre_ids: [28, 53], title: "Mortal Kombat II", release_date: "2026-05-08", vote_average: 8.4, poster_path: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&q=80", overview: "The high-stakes martial arts competition escalates into multi-realm warfare under Liu Kang's guidance." },
         { id: 999103, genre_ids: [28, 878], title: "Spider-Noir (Season 1)", release_date: "2026-05-25", vote_average: 9.1, poster_path: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=1200&q=80", overview: "An aging private investigator in 1930s New York grapples with past choices and new spider-like abilities." },
         { id: 999104, genre_ids: [18], title: "The Devil Wears Prada 2", release_date: "2026-05-29", vote_average: 7.8, poster_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80", overview: "Two decades later, the iconic editorial ecosystem faces structural transformations amid modern fashion and digital dynamics." },
-        { id: 999105, genre_ids: [18], title: "Dutton Ranch", release_date: "2026-05-15", vote_average: 8.7, poster_path: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&q=80", overview: "The premier legacy tracking extension profiling tactical land struggles across contemporary mountain boundaries." },
-        { id: 999106, genre_ids: [18, 53], title: "Rivals (Season 2)", release_date: "2026-05-15", vote_average: 8.2, poster_path: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80", overview: "Salacious corporate power-grabbing escalates across the broadcast entertainment industry in 1980s England." },
-        { id: 999107, genre_ids: [878, 53], title: "Backrooms", release_date: "2026-05-29", vote_average: 8.0, poster_path: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80", overview: "An expansive cinematic treatment exploring liminal navigation pathways across endless yellow hallways and unknown terrors." },
-        { id: 999108, genre_ids: [28, 53], title: "Jack Ryan: Ghost War", release_date: "2026-05-20", vote_average: 8.5, poster_path: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80", overview: "Jack Ryan goes off-grid to expose an unauthorized black-ops organization within the tracking structures." },
-        { id: 27205, genre_ids: [28, 878, 53], title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through dream-sharing technology." },
-        { id: 157336, genre_ids: [878, 18], title: "Interstellar", release_date: "2014-11-05", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/gEU2vYmkafg5m3FYv6vVhyjClv2.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/xJHokn8gto6mZ8PycmdvU6VmN8K.jpg", overview: "Explorers travel through a wormhole in space in an attempt to ensure humanity's survival." }
+        { id: 27205, genre_ids: [28, 878, 53], title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through dream-sharing technology." }
     ];
 
-    // Global Tracking Filters Matrix for Custom user Dismissals
     let dismissedCardIds = JSON.parse(localStorage.getItem('cineverse_dismissed_cards')) || [];
     let localContinueWatching = JSON.parse(localStorage.getItem('cineverse_continue_watching')) || [];
+
+    // Initialize VideoJS Instance safely on load execution
+    document.addEventListener("DOMContentLoaded", () => {
+        if(window.videojs) {
+            vjsPlayer = videojs('cineverse-videojs', {
+                fluid: true,
+                playbackRates: [0.5, 1, 1.5, 2],
+                userActions: { hotkeys: true }
+            });
+        }
+        loadTMDBContent();
+    });
 
     window.buildDashboard = function(movies) {
         const trendGrid = document.getElementById('grid-trending');
         if (!trendGrid) return;
         trendGrid.innerHTML = "";
-
         const visibleMovies = movies.filter(m => !dismissedCardIds.includes(m.id));
-        if (visibleMovies.length === 0) {
-            trendGrid.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">No titles found in this filter lane.</p>`;
-            return;
-        }
-
         visibleMovies.forEach(movie => {
             const title = movie.title || movie.name || "Untitled Production";
             const date = (movie.release_date || movie.first_air_date || "2026").substring(0,4);
@@ -168,10 +192,7 @@
                     </div>
                     <div class="card-details" onclick="window.showDetails(${movie.id}, '${mediaType}')">
                         <h3>${title}</h3>
-                        <div class="meta-line">
-                            <span>${date}</span>
-                            <span class="rating">★ ${rating}</span>
-                        </div>
+                        <div class="meta-line"><span>${date}</span><span class="rating">★ ${rating}</span></div>
                     </div>
                 </div>`;
         });
@@ -181,9 +202,7 @@
         const top10Grid = document.getElementById('grid-top10');
         if (!top10Grid) return;
         top10Grid.innerHTML = "";
-
         const visibleMovies = movies.filter(m => !dismissedCardIds.includes(m.id));
-
         visibleMovies.forEach((movie, index) => {
             const title = movie.title || movie.name || "Global Hit Film";
             const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "9.0";
@@ -199,10 +218,7 @@
                     </div>
                     <div class="card-details" onclick="window.showDetails(${movie.id}, '${mediaType}')">
                         <h3>${title}</h3>
-                        <div class="meta-line">
-                            <span>Trending Now</span>
-                            <span class="rating">★ ${rating}</span>
-                        </div>
+                        <div class="meta-line"><span>Trending</span><span class="rating">★ ${rating}</span></div>
                     </div>
                 </div>`;
         });
@@ -212,15 +228,12 @@
         const rowContinue = document.getElementById('row-continue');
         const contGrid = document.getElementById('grid-continue');
         if (!contGrid || !rowContinue) return;
-
         const visibleHistory = localContinueWatching.filter(m => !dismissedCardIds.includes(m.id));
 
-        // Conditional rendering layout validation
         if (visibleHistory.length === 0) {
             rowContinue.style.display = 'none';
             return;
         }
-
         rowContinue.style.display = 'block';
         contGrid.innerHTML = "";
 
@@ -239,22 +252,18 @@
                     </div>
                     <div class="card-details" onclick="window.showDetails(${movie.id}, '${mediaType}')">
                         <h3>${title}</h3>
-                        <div class="meta-line">
-                            <span>Resume Playing</span>
-                            <span style="color:var(--accent-secondary); font-weight:600;">${progress}%</span>
-                        </div>
+                        <div class="meta-line"><span>Resume</span><span style="color:var(--accent-secondary); font-weight:600;">${progress}%</span></div>
                     </div>
                 </div>`;
         });
     };
 
     window.dismissCard = function(event, id, originalLane) {
-        event.stopPropagation(); // Block detail window from popping open on deletion
+        event.stopPropagation();
         if(!dismissedCardIds.includes(id)) {
             dismissedCardIds.push(id);
             localStorage.setItem('cineverse_dismissed_cards', JSON.stringify(dismissedCardIds));
         }
-        // Force state recalculation cascade across active rows
         window.buildDashboard(masterCatalog);
         window.renderTop20(top20Catalog);
         window.renderContinueWatching();
@@ -263,8 +272,6 @@
     async function loadTMDBContent() {
         try {
             const trendRes = await fetch(`${TMDB_BASE}/trending/all/week?api_key=${TMDB_KEY}`);
-            if (!trendRes.ok) throw new Error("API Path Limit Check Block");
-            
             const trendData = await trendRes.json();
             masterCatalog = trendData.results || [];
 
@@ -275,10 +282,8 @@
             window.renderTop20(top20Catalog);
             window.buildDashboard(masterCatalog);
         } catch (err) {
-            console.warn("API Restriction hit. Constructing verified internal May 2026 data arrays.");
             masterCatalog = officialMay2026Data;
             top20Catalog = officialMay2026Data;
-            
             window.renderTop20(top20Catalog);
             window.buildDashboard(masterCatalog);
         }
@@ -288,7 +293,6 @@
     window.showDetails = async function(id, type) {
         const drawer = document.getElementById('details-drawer');
         if(!drawer) return;
-
         currentActiveMedia = { id: id, type: type };
         drawer.classList.add('active');
         window.closeVideoPlayer(); 
@@ -298,38 +302,27 @@
         try {
             const detailFetch = await fetch(`${TMDB_BASE}/${type}/${id}?api_key=${TMDB_KEY}`);
             const details = await detailFetch.json();
-
-            const title = details.title || details.name || "Unknown Production";
-            const date = (details.release_date || details.first_air_date || "2026").substring(0,4);
-            const rating = details.vote_average ? details.vote_average.toFixed(1) : "N/A";
-            const bgPath = details.backdrop_path ? (TMDB_BG_IMG + details.backdrop_path) : "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&q=80";
-
-            document.getElementById('drawer-title').innerText = title;
-            document.getElementById('drawer-year').innerText = date;
-            document.getElementById('drawer-rating').innerText = `★ ${rating}`;
+            document.getElementById('drawer-title').innerText = details.title || details.name;
+            document.getElementById('drawer-year').innerText = (details.release_date || details.first_air_date || "2026").substring(0,4);
+            document.getElementById('drawer-rating').innerText = `★ ${details.vote_average.toFixed(1)}`;
             document.getElementById('drawer-type').innerText = type.toUpperCase();
-            document.getElementById('drawer-synopsis').innerText = details.overview || "No synchronized records.";
-            document.getElementById('drawer-banner-img').style.backgroundImage = `url('${bgPath}')`;
-            
-            if(!selectedAsset) {
-                selectedAsset = { id: id, title: title, poster_path: details.poster_path || "", media_type: type };
-            }
+            document.getElementById('drawer-synopsis').innerText = details.overview;
+            document.getElementById('drawer-banner-img').style.backgroundImage = `url('${TMDB_BG_IMG + details.backdrop_path}')`;
+            if(!selectedAsset) selectedAsset = { id: id, title: details.title || details.name, poster_path: details.poster_path || "", media_type: type };
         } catch (err) {
             if(selectedAsset) {
                 document.getElementById('drawer-title').innerText = selectedAsset.title;
                 document.getElementById('drawer-year').innerText = (selectedAsset.release_date || "2026").substring(0,4);
                 document.getElementById('drawer-rating').innerText = `★ ${selectedAsset.vote_average || '8.5'}`;
-                document.getElementById('drawer-type').innerText = "STREAM";
-                document.getElementById('drawer-synopsis').innerText = selectedAsset.overview || "Local catalog presentation profile active.";
+                document.getElementById('drawer-synopsis').innerText = selectedAsset.overview;
                 document.getElementById('drawer-banner-img').style.backgroundImage = `url('${selectedAsset.backdrop_path}')`;
             }
         }
 
-        // Action Track: Capture user interaction and write to Continue History Array
         if(selectedAsset) {
             const alreadyExists = localContinueWatching.some(item => item.id === selectedAsset.id);
             if(!alreadyExists) {
-                selectedAsset.progress = Math.floor(Math.random() * 40) + 10; // Dynamic tracking mock value
+                selectedAsset.progress = Math.floor(Math.random() * 40) + 10;
                 localContinueWatching.unshift(selectedAsset);
                 localStorage.setItem('cineverse_continue_watching', JSON.stringify(localContinueWatching));
                 window.renderContinueWatching();
@@ -340,28 +333,51 @@
     window.switchServer = function(serverId) {
         const playerZone = document.getElementById('player-zone');
         const videoIframe = document.getElementById('video-iframe');
+        const nativeZone = document.getElementById('native-player-zone');
         const id = currentActiveMedia.id;
         const type = currentActiveMedia.type;
 
-        let embedUrl = serverId === 1 
-            ? `https://vidsrc.me/embed/movie?tmdb=${id}`
-            : `https://vidsrc.cc/vidsrc/movie/${id}`;
+        // Reset previous player state channels
+        videoIframe.style.display = "none";
+        videoIframe.src = "";
+        nativeZone.classList.remove('active');
+        if(vjsPlayer) vjsPlayer.pause();
 
-        if(type === 'tv') {
-            embedUrl = serverId === 1
-                ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`
-                : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
+        if (serverId === 1 || serverId === 2) {
+            videoIframe.style.display = "block";
+            let embedUrl = serverId === 1 
+                ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+                : `https://vidsrc.cc/vidsrc/movie/${id}`;
+            if(type === 'tv') {
+                embedUrl = serverId === 1
+                    ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`
+                    : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
+            }
+            videoIframe.src = embedUrl;
+        } else if (serverId === 3) {
+            // Server 3 Initialization Engine: WebSocket Streaming proxy target simulation
+            nativeZone.classList.add('active');
+            if(vjsPlayer) {
+                vjsPlayer.src({
+                    type: 'application/x-mpegURL', // Emulates live stream pipeline indexing chunk delivery
+                    src: `https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8`
+                });
+                vjsPlayer.play().catch(() => console.log("Auto-playback user interaction required"));
+            }
         }
 
         if(playerZone) playerZone.classList.add('active');
-        if(videoIframe) videoIframe.src = embedUrl;
     };
 
     window.closeVideoPlayer = function() {
         const playerZone = document.getElementById('player-zone');
         const videoIframe = document.getElementById('video-iframe');
+        const nativeZone = document.getElementById('native-player-zone');
+
         if(playerZone) playerZone.classList.remove('active');
-        if(videoIframe) videoIframe.src = ""; 
+        if(videoIframe) { videoIframe.src = ""; videoIframe.style.display = "block"; }
+        if(nativeZone) nativeZone.classList.remove('active');
+        if(vjsPlayer) vjsPlayer.pause();
     };
 
     window.closeDetails = function() {
@@ -399,31 +415,9 @@
     window.filterGenre = function(genreName, element, genreId) {
         document.querySelectorAll('.genre-tag').forEach(t => t.classList.remove('active'));
         if (element) element.classList.add('active');
-        if(genreName === 'All') { 
-            window.buildDashboard(masterCatalog); 
-        } else if (genreId) { 
-            window.buildDashboard(masterCatalog.filter(m => m.genre_ids && m.genre_ids.includes(genreId))); 
-        }
+        if(genreName === 'All') { window.buildDashboard(masterCatalog); } 
+        else if (genreId) { window.buildDashboard(masterCatalog.filter(m => m.genre_ids && m.genre_ids.includes(genreId))); }
     };
-
-    // Particles Canvas Engine
-    const canvas = document.getElementById('bg-canvas');
-    if(canvas) {
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-        class Particle {
-            constructor() { this.reset(); }
-            reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.size = Math.random() * 1.5 + 0.4; this.speedY = -Math.random() * 0.3 - 0.1; this.alpha = Math.random() * 0.4 + 0.1; }
-            update() { this.y += this.speedY; if (this.y < 0) { this.reset(); this.y = height; } }
-            draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore(); }
-        }
-        const particles = Array.from({ length: 20 }, () => new Particle());
-        function animate() { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
-        animate();
-    }
-
-    loadTMDBContent();
     </script>
 </body>
 </html>
