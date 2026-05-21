@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CineVerse | Stream Ultimate Cinema</title>
     <link rel="stylesheet" href="css/styles.css">
-    
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-
     <style>
         .movie-card {
             position: relative;
@@ -39,24 +35,6 @@
         }
         #row-continue {
             display: none;
-        }
-        /* Native VideoJS Player Wrapper Frame Configuration */
-        .native-player-container {
-            display: none;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: #000;
-            z-index: 5;
-        }
-        .native-player-container.active {
-            display: block;
-        }
-        .video-js {
-            width: 100% !important;
-            height: 100% !important;
         }
     </style>
 </head>
@@ -109,9 +87,6 @@
         
         <div id="player-zone" class="player-viewport">
             <iframe id="video-iframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-            <div id="native-player-zone" class="native-player-container">
-                <video id="cineverse-videojs" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto"></video>
-            </div>
         </div>
 
         <div id="drawer-banner-img" class="drawer-banner"></div>
@@ -128,7 +103,7 @@
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Select Server:</span>
                 <button id="server1-btn" class="server-btn" onclick="window.switchServer(1)">⚡ Server 1</button>
                 <button id="server2-btn" class="server-btn" onclick="window.switchServer(2)">🌐 Server 2</button>
-                <button id="server3-btn" class="server-btn" onclick="window.switchServer(3)">🔌 Server 3 (VideoJS)</button>
+                <button id="server3-btn" class="server-btn" onclick="window.switchServer(3)">🚀 Server 3 (Auto-Embed)</button>
             </div>
 
             <p id="drawer-synopsis" class="drawer-overview">Fetching media overview profiles...</p>
@@ -147,30 +122,18 @@
     let masterCatalog = [];
     let top20Catalog = [];
     let currentActiveMedia = { id: '', type: '' };
-    let vjsPlayer = null;
 
     const officialMay2026Data = [
         { id: 999101, genre_ids: [878, 28], title: "The Mandalorian & Grogu", release_date: "2026-05-22", vote_average: 8.9, poster_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80", overview: "The legendary duo returns to the galactic theater as lingering Imperial warlords pose a new challenge to the Outer Rim alliances." },
         { id: 999102, genre_ids: [28, 53], title: "Mortal Kombat II", release_date: "2026-05-08", vote_average: 8.4, poster_path: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&q=80", overview: "The high-stakes martial arts competition escalates into multi-realm warfare under Liu Kang's guidance." },
         { id: 999103, genre_ids: [28, 878], title: "Spider-Noir (Season 1)", release_date: "2026-05-25", vote_average: 9.1, poster_path: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=1200&q=80", overview: "An aging private investigator in 1930s New York grapples with past choices and new spider-like abilities." },
-        { id: 999104, genre_ids: [18], title: "The Devil Wears Prada 2", release_date: "2026-05-29", vote_average: 7.8, poster_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80", overview: "Two decades later, the iconic editorial ecosystem faces structural transformations amid modern fashion and digital dynamics." },
-        { id: 27205, genre_ids: [28, 878, 53], title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through dream-sharing technology." }
+        { id: 999104, genre_ids: [18], title: "The Devil Wears Prada 2", release_date: "2026-05-29", vote_average: 7.8, poster_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80", backdrop_path: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80", overview: "Two decades later, the iconic editorial ecosystem faces structural transformations amid modern fashion and digital dynamics." }
     ];
 
     let dismissedCardIds = JSON.parse(localStorage.getItem('cineverse_dismissed_cards')) || [];
     let localContinueWatching = JSON.parse(localStorage.getItem('cineverse_continue_watching')) || [];
 
-    // Initialize VideoJS Instance safely on load execution
-    document.addEventListener("DOMContentLoaded", () => {
-        if(window.videojs) {
-            vjsPlayer = videojs('cineverse-videojs', {
-                fluid: true,
-                playbackRates: [0.5, 1, 1.5, 2],
-                userActions: { hotkeys: true }
-            });
-        }
-        loadTMDBContent();
-    });
+    document.addEventListener("DOMContentLoaded", loadTMDBContent);
 
     window.buildDashboard = function(movies) {
         const trendGrid = document.getElementById('grid-trending');
@@ -333,51 +296,36 @@
     window.switchServer = function(serverId) {
         const playerZone = document.getElementById('player-zone');
         const videoIframe = document.getElementById('video-iframe');
-        const nativeZone = document.getElementById('native-player-zone');
         const id = currentActiveMedia.id;
         const type = currentActiveMedia.type;
 
-        // Reset previous player state channels
-        videoIframe.style.display = "none";
-        videoIframe.src = "";
-        nativeZone.classList.remove('active');
-        if(vjsPlayer) vjsPlayer.pause();
+        let embedUrl = "";
 
-        if (serverId === 1 || serverId === 2) {
-            videoIframe.style.display = "block";
-            let embedUrl = serverId === 1 
-                ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+        if (serverId === 1) {
+            embedUrl = type === 'tv' 
+                ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`
+                : `https://vidsrc.me/embed/movie?tmdb=${id}`;
+        } else if (serverId === 2) {
+            embedUrl = type === 'tv'
+                ? `https://vidsrc.cc/vidsrc/tv/${id}/1/1`
                 : `https://vidsrc.cc/vidsrc/movie/${id}`;
-            if(type === 'tv') {
-                embedUrl = serverId === 1
-                    ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`
-                    : `https://vidsrc.cc/vidsrc/tv/${id}/1/1`;
-            }
-            videoIframe.src = embedUrl;
         } else if (serverId === 3) {
-            // Server 3 Initialization Engine: WebSocket Streaming proxy target simulation
-            nativeZone.classList.add('active');
-            if(vjsPlayer) {
-                vjsPlayer.src({
-                    type: 'application/x-mpegURL', // Emulates live stream pipeline indexing chunk delivery
-                    src: `https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8`
-                });
-                vjsPlayer.play().catch(() => console.log("Auto-playback user interaction required"));
-            }
+            // Server 3: vidsrc.pro automated catalog pipeline wrapper
+            embedUrl = type === 'tv'
+                ? `https://vidsrc.pro/embed/tv/${id}/1/1`
+                : `https://vidsrc.pro/embed/movie/${id}`;
         }
 
+        if(videoIframe) videoIframe.src = embedUrl;
         if(playerZone) playerZone.classList.add('active');
     };
 
     window.closeVideoPlayer = function() {
         const playerZone = document.getElementById('player-zone');
         const videoIframe = document.getElementById('video-iframe');
-        const nativeZone = document.getElementById('native-player-zone');
 
         if(playerZone) playerZone.classList.remove('active');
-        if(videoIframe) { videoIframe.src = ""; videoIframe.style.display = "block"; }
-        if(nativeZone) nativeZone.classList.remove('active');
-        if(vjsPlayer) vjsPlayer.pause();
+        if(videoIframe) videoIframe.src = "";
     };
 
     window.closeDetails = function() {
