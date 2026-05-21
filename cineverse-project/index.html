@@ -79,4 +79,159 @@
         </div>
     </div>
 </body>
+    </div>
+
+    <script>
+    const TMDB_KEY = "764acde68ad57d8d41cb361d4fe0271b";
+    const TMDB_BASE = "https://api.themoviedb.org/3";
+    const TMDB_IMG = "https://image.tmdb.org/t/p/w300";
+    const TMDB_BG_IMG = "https://image.tmdb.org/t/p/original";
+
+    let masterCatalog = [];
+    let currentActiveMedia = { id: '', type: '' };
+
+    window.buildDashboard = function(movies) {
+        const trendGrid = document.getElementById('grid-trending');
+        if (!trendGrid) return;
+        trendGrid.innerHTML = "";
+        movies.forEach(movie => {
+            const title = movie.title || movie.name || "Untitled Production";
+            const date = (movie.release_date || movie.first_air_date || "2026").substring(0,4);
+            const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+            const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
+            const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+            trendGrid.innerHTML += `
+                <div class="movie-card" onclick="window.showDetails(${movie.id}, '${mediaType}')">
+                    <div class="card-img-wrapper"><img src="${poster}" alt="${title}"></div>
+                    <div class="card-details"><h3>${title}</h3><div class="meta-line"><span>${date}</span><span class="rating">★ ${rating}</span></div></div>
+                </div>`;
+        });
+    };
+
+    window.renderTop10 = function(movies) {
+        const top10Grid = document.getElementById('grid-top10');
+        if (!top10Grid) return;
+        top10Grid.innerHTML = "";
+        movies.forEach((movie, index) => {
+            const title = movie.title || movie.name || "Global Hit Film";
+            const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "9.0";
+            const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
+            const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+            top10Grid.innerHTML += `
+                <div class="movie-card" onclick="window.showDetails(${movie.id}, '${mediaType}')">
+                    <div class="card-img-wrapper"><div class="rank-badge">#${index + 1}</div><img src="${poster}" alt="${title}"></div>
+                    <div class="card-details"><h3>${title}</h3><div class="meta-line"><span>Trending Now</span><span class="rating">★ ${rating}</span></div></div>
+                </div>`;
+        });
+    };
+
+    window.renderContinueWatching = function(movies) {
+        const contGrid = document.getElementById('grid-continue');
+        if (!contGrid) return;
+        contGrid.innerHTML = "";
+        const simulatedProgress = [68, 35];
+        movies.forEach((movie, index) => {
+            const title = movie.title || movie.name;
+            const poster = movie.poster_path.startsWith('http') ? movie.poster_path : (TMDB_IMG + movie.poster_path);
+            const progress = simulatedProgress[index] || 50;
+            const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+            contGrid.innerHTML += `
+                <div class="movie-card" onclick="window.showDetails(${movie.id}, '${mediaType}')">
+                    <div class="card-img-wrapper"><img src="${poster}" alt="${title}"><div class="progress-container"><div class="progress-bar" style="width: ${progress}%"></div></div></div>
+                    <div class="card-details"><h3>${title}</h3><div class="meta-line"><span>Resume Playing</span><span style="color:var(--accent-secondary); font-weight:600;">${progress}%</span></div></div>
+                </div>`;
+        });
+    };
+
+    async function loadTMDBContent() {
+        try {
+            const trendRes = await fetch(`${TMDB_BASE}/trending/all/week?api_key=${TMDB_KEY}`);
+            if (!trendRes.ok) throw new Error("API Limit");
+            const trendData = await trendRes.json();
+            masterCatalog = trendData.results || [];
+            const popRes = await fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&page=1`);
+            const popData = await popRes.json();
+            const top10List = popData.results ? popData.results.slice(0, 10) : [];
+            window.renderTop10(top10List);
+            window.buildDashboard(masterCatalog);
+            window.renderContinueWatching(masterCatalog.slice(3, 5)); 
+        } catch (err) {
+            masterCatalog = [
+                { id: 27205, title: "Inception", release_date: "2010-07-16", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/o0gii8vAn9m9Yg36ccpSTgZ4v2b.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/8ZTVqvKDhz9vly4vRK3g04gY2gL.jpg", overview: "A thief who steals corporate secrets through dream-sharing technology." },
+                { id: 157336, title: "Interstellar", release_date: "2014-11-05", vote_average: 8.4, poster_path: "https://image.tmdb.org/t/p/w300/gEU2vYmkafg5m3FYv6vVhyjClv2.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/xJHokn8gto6mZ8PycmdvU6VmN8K.jpg", overview: "Explorers travel through a wormhole in space." },
+                { id: 155, title: "The Dark Knight", release_date: "2008-07-16", vote_average: 8.5, poster_path: "https://image.tmdb.org/t/p/w300/qJ2tWw7B6g27vC3HG6gGvCUwUAs.jpg", backdrop_path: "https://image.tmdb.org/t/p/original/nMK966lh9wXgjo993vunw37g9j6.jpg", overview: "Batman raises the stakes in his war on crime." }
+            ];
+            window.renderTop10(masterCatalog);
+            window.buildDashboard(masterCatalog);
+            window.renderContinueWatching(masterCatalog.slice(0, 2));
+        }
+    }
+
+    window.showDetails = async function(id, type) {
+        const drawer = document.getElementById('details-drawer');
+        if(!drawer) return;
+        currentActiveMedia = { id: id, type: type };
+        drawer.classList.add('active');
+        window.closeVideoPlayer(); 
+        try {
+            const detailFetch = fetch(`${TMDB_BASE}/${type}/${id}?api_key=${TMDB_KEY}`);
+            const detailRes = await detailFetch;
+            const details = await detailRes.json();
+            document.getElementById('drawer-title').innerText = details.title || details.name;
+            document.getElementById('drawer-year').innerText = (details.release_date || details.first_air_date || "2026").substring(0,4);
+            document.getElementById('drawer-rating').innerText = `★ ${details.vote_average.toFixed(1)}`;
+            document.getElementById('drawer-synopsis').innerText = details.overview;
+            document.getElementById('drawer-banner-img').style.backgroundImage = `url('${TMDB_BG_IMG + details.backdrop_path}')`;
+        } catch (err) {
+            const localData = masterCatalog.find(m => m.id === id);
+            if(localData) {
+                document.getElementById('drawer-title').innerText = localData.title;
+                document.getElementById('drawer-synopsis').innerText = localData.overview;
+                document.getElementById('drawer-banner-img').style.backgroundImage = `url('${localData.backdrop_path}')`;
+            }
+        }
+    };
+
+    window.switchServer = function(serverId) {
+        const playerZone = document.getElementById('player-zone');
+        const videoIframe = document.getElementById('video-iframe');
+        let embedUrl = serverId === 1 
+            ? `https://vidsrc.me/embed/movie?tmdb=${currentActiveMedia.id}`
+            : `https://vidsrc.cc/vidsrc/movie/${currentActiveMedia.id}`;
+        if(playerZone) playerZone.classList.add('active');
+        if(videoIframe) videoIframe.src = embedUrl;
+    };
+
+    window.closeVideoPlayer = function() {
+        if(document.getElementById('player-zone')) document.getElementById('player-zone').classList.remove('active');
+        if(document.getElementById('video-iframe')) document.getElementById('video-iframe').src = ""; 
+    };
+
+    window.closeDetails = function() {
+        window.closeVideoPlayer();
+        document.getElementById('details-drawer').classList.remove('active');
+    };
+
+    // Canvas Engine Execution
+    const canvas = document.getElementById('bg-canvas');
+    if(canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        class Particle {
+            constructor() { this.reset(); }
+            reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.size = Math.random() * 1.2; this.speedY = -Math.random() * 0.2; this.alpha = Math.random() * 0.5; }
+            update() { this.y += this.speedY; if (this.y < 0) this.reset(); }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${this.alpha})`; ctx.fill(); }
+        }
+        const particles = Array.from({ length: 20 }, () => new Particle());
+        function animate() { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        animate();
+    }
+
+    loadTMDBContent();
+    </script>
+</body>
+</html>
+
 </html>
