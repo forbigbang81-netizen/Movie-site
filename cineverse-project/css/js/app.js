@@ -345,3 +345,61 @@ function animate() {
     requestAnimationFrame(animate);
 }
 animate();
+// --- Global Authentication Bridge ---
+document.addEventListener("DOMContentLoaded", () => {
+    const regForm = document.getElementById("register-form");
+    const loginForm = document.getElementById("login-form");
+
+    if (regForm) {
+        regForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!window.firebaseAuthInstance) return alert("Firebase system is still initializing. Please wait a moment.");
+            
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pass').value;
+            try {
+                const userCredential = await window.firebaseCreateUser(window.firebaseAuthInstance, email, password);
+                await window.firebaseSendVerification(userCredential.user);
+                alert("Verification link sent! Check your Gmail inbox.");
+                window.switchPane('landing');
+            } catch (error) { 
+                alert("Registration Error: " + error.message); 
+            }
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!window.firebaseAuthInstance) return alert("Firebase system is still initializing. Please wait a moment.");
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+            try {
+                const userCredential = await window.firebaseSignIn(window.firebaseAuthInstance, email, password);
+                if (!userCredential.user.emailVerified) {
+                    alert("Please complete verification via the email sent to your inbox first.");
+                    await window.firebaseSignOut(window.firebaseAuthInstance);
+                } else {
+                    const popup = document.getElementById('verification-popup');
+                    if (popup) popup.classList.add('active');
+                }
+            } catch (error) { 
+                alert("Login Error: " + error.message); 
+            }
+        });
+    }
+});
+
+window.handleLogout = async function() {
+    if (!window.firebaseAuthInstance) return;
+    try {
+        await window.firebaseSignOut(window.firebaseAuthInstance);
+        if (typeof window.closeDetails === "function") {
+            window.closeDetails();
+        }
+    } catch (error) { 
+        alert(error.message); 
+    }
+};
+
